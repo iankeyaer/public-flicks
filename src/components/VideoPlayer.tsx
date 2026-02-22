@@ -4,12 +4,11 @@ import {
   ShieldCheck,
   Maximize,
   Minimize,
+  MonitorPlay,
   Flag,
   ChevronDown,
   Check,
   RefreshCw,
-  Settings,
-  Volume2,
 } from "lucide-react";
 import { StreamSource } from "@/types/movie";
 import { motion, AnimatePresence } from "framer-motion";
@@ -134,6 +133,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
   const handleReport = () => {
     setReported(true);
     setShowReportMenu(false);
+    // Auto-try next source
     if (activeServer < sources.length - 1) {
       setTimeout(() => setActiveServer((prev) => prev + 1), 1500);
     }
@@ -146,10 +146,10 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
 
   if (!sources.length) {
     return (
-      <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
+      <div className="aspect-video bg-secondary rounded-xl flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-          <p className="text-muted-foreground text-sm">This content is currently unavailable</p>
+          <p className="text-muted-foreground">This content is currently unavailable</p>
         </div>
       </div>
     );
@@ -158,7 +158,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
   const currentSource = sources[activeServer];
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {/* Ad tip */}
       <AnimatePresence>
         {showAdTip && (
@@ -166,7 +166,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="flex items-center justify-between gap-3 rounded-lg bg-primary/10 border border-primary/20 px-4 py-2.5"
+            className="flex items-center justify-between gap-3 rounded-xl bg-primary/10 border border-primary/20 px-4 py-2.5"
           >
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-primary flex-shrink-0" />
@@ -192,33 +192,26 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
       {/* Player container */}
       <div
         ref={containerRef}
-        className="relative overflow-hidden bg-black group"
-        style={{ borderRadius: isFullscreen ? 0 : 8 }}
+        className="relative rounded-xl overflow-hidden border border-border bg-background group"
         onMouseMove={resetControlsTimer}
         onTouchStart={resetControlsTimer}
       >
         {/* Video area */}
         <div className="relative aspect-video bg-black">
-          {/* Netflix-style loading overlay */}
+          {/* Loading overlay */}
           <AnimatePresence>
             {showLoading && (
               <motion.div
                 initial={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.4 }}
                 className="absolute inset-0 flex flex-col items-center justify-center bg-black z-20"
               >
-                {/* Netflix-style loading animation */}
-                <div className="flex flex-col items-center gap-6">
-                  {/* Pulsing ring loader */}
-                  <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 rounded-full border-[3px] border-primary/20" />
-                    <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-primary animate-spin" />
-                    <div className="absolute inset-[6px] rounded-full border-[2px] border-transparent border-b-primary/60 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
-                  </div>
-                  <div className="text-center space-y-1">
-                    <p className="text-[13px] font-medium text-white/90 tracking-wide">Loading</p>
-                    <p className="text-[11px] text-white/40">Please wait...</p>
+                <div className="text-center space-y-4">
+                  <div className="h-12 w-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin mx-auto" />
+                  <div className="space-y-1.5">
+                    <p className="text-sm font-medium text-foreground">Loading</p>
+                    <p className="text-xs text-muted-foreground">Please be patient, this may take a moment...</p>
                   </div>
                 </div>
               </motion.div>
@@ -228,17 +221,12 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
           {/* Error overlay */}
           {error && activeServer >= sources.length - 1 && (
             <div className="absolute inset-0 flex items-center justify-center bg-black z-20">
-              <div className="text-center space-y-4">
-                <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mx-auto">
-                  <AlertCircle className="h-7 w-7 text-primary" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-white/90">Something went wrong</p>
-                  <p className="text-xs text-white/40">This content is temporarily unavailable</p>
-                </div>
+              <div className="text-center space-y-3">
+                <AlertCircle className="h-8 w-8 text-primary mx-auto" />
+                <p className="text-sm text-muted-foreground">This content is temporarily unavailable.</p>
                 <button
-                  onClick={() => setActiveServer(0)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors bg-primary/10 px-4 py-2 rounded-md"
+                  onClick={() => { setActiveServer(0); }}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
                 >
                   <RefreshCw className="h-3.5 w-3.5" /> Try again
                 </button>
@@ -253,10 +241,10 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute top-4 right-4 z-30 bg-black/80 backdrop-blur-md border border-white/10 rounded-lg px-3 py-2 shadow-2xl flex items-center gap-2"
+                className="absolute top-4 right-4 z-30 bg-card border border-border rounded-lg px-3 py-2 shadow-lg flex items-center gap-2"
               >
                 <Check className="h-4 w-4 text-primary" />
-                <span className="text-xs text-white/90">Switching source...</span>
+                <span className="text-xs text-foreground">Reported — trying next source...</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -266,147 +254,129 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
             key={iframeKey}
             src={currentSource.url}
             title={title}
-            className={`w-full h-full border-0 transition-opacity duration-500 ${showLoading ? "opacity-0" : "opacity-100"}`}
+            className={`w-full h-full border-0 bg-black transition-opacity duration-500 ${showLoading ? "opacity-0" : "opacity-100"}`}
             allowFullScreen
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             onLoad={() => setIframeLoaded(true)}
             onError={handleError}
             referrerPolicy="no-referrer"
-            style={{ border: 0, background: '#000', colorScheme: 'dark' }}
+            style={{ border: 0 }}
           />
         </div>
 
-        {/* Netflix-style bottom controls */}
+        {/* Bottom control bar */}
         <AnimatePresence>
           {(showControls || showSourceMenu || showReportMenu) && !showLoading && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.2 }}
-              className="absolute bottom-0 left-0 right-0 z-30"
+              className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-12 pb-3 px-4"
             >
-              {/* Gradient backdrop */}
-              <div className="bg-gradient-to-t from-black via-black/70 to-transparent pt-20 pb-0">
-                {/* Fake progress bar */}
-                <div className="px-4 mb-2">
-                  <div className="w-full h-[3px] bg-white/20 rounded-full overflow-hidden group/progress cursor-pointer hover:h-[5px] transition-all">
-                    <div className="h-full bg-primary rounded-full w-0 group-hover/progress:shadow-[0_0_8px_hsl(var(--primary))]" />
-                  </div>
+              <div className="flex items-center justify-between gap-3">
+                {/* Left: title */}
+                <div className="flex items-center gap-2 min-w-0">
+                  <MonitorPlay className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span className="text-xs font-medium text-white truncate">{title}</span>
                 </div>
 
-                {/* Controls row */}
-                <div className="flex items-center justify-between px-4 pb-3">
-                  {/* Left side */}
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Volume2 className="h-5 w-5 text-white/80 hover:text-white cursor-pointer transition-colors flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-semibold text-white truncate">{title}</p>
-                    </div>
-                  </div>
-
-                  {/* Right side */}
-                  <div className="flex items-center gap-0.5">
-                    {/* Source selector */}
-                    <div className="relative" ref={sourceMenuRef}>
-                      <button
-                        onClick={() => { setShowSourceMenu(!showSourceMenu); setShowReportMenu(false); }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors"
-                      >
-                        <Settings className="h-4 w-4" />
-                        <span>{currentSource.quality}</span>
-                        <ChevronDown className={`h-3 w-3 transition-transform ${showSourceMenu ? "rotate-180" : ""}`} />
-                      </button>
-
-                      <AnimatePresence>
-                        {showSourceMenu && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 4 }}
-                            transition={{ duration: 0.12 }}
-                            className="absolute bottom-full mb-2 right-0 w-52 bg-black/95 backdrop-blur-xl border border-white/10 rounded-md shadow-2xl overflow-hidden z-50"
-                          >
-                            <div className="px-3 py-2 border-b border-white/10">
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-white/50">Quality</p>
-                            </div>
-                            {sources.map((source, idx) => (
-                              <button
-                                key={idx}
-                                onClick={() => handleSourceChange(idx)}
-                                className={`w-full flex items-center justify-between px-3 py-2.5 text-xs transition-colors ${
-                                  idx === activeServer
-                                    ? "bg-white/10 text-white"
-                                    : "text-white/70 hover:bg-white/5 hover:text-white"
-                                }`}
-                              >
-                                <div className="flex items-center gap-2">
-                                  {idx === activeServer ? (
-                                    <Check className="h-3.5 w-3.5 text-primary" />
-                                  ) : (
-                                    <span className="w-3.5" />
-                                  )}
-                                  <span className={idx === activeServer ? "font-semibold" : ""}>{source.name}</span>
-                                </div>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                                  source.quality === "1080p"
-                                    ? "bg-primary/20 text-primary"
-                                    : "bg-white/10 text-white/50"
-                                }`}>
-                                  {source.quality}
-                                </span>
-                              </button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Report */}
-                    <div className="relative" ref={reportMenuRef}>
-                      <button
-                        onClick={() => { setShowReportMenu(!showReportMenu); setShowSourceMenu(false); }}
-                        className="p-2 rounded text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                        title="Report issue"
-                      >
-                        <Flag className="h-4 w-4" />
-                      </button>
-
-                      <AnimatePresence>
-                        {showReportMenu && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 4 }}
-                            transition={{ duration: 0.12 }}
-                            className="absolute bottom-full mb-2 right-0 w-48 bg-black/95 backdrop-blur-xl border border-white/10 rounded-md shadow-2xl overflow-hidden z-50"
-                          >
-                            <div className="px-3 py-2 border-b border-white/10">
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-white/50">Report Issue</p>
-                            </div>
-                            {["Not playing", "Bad quality", "Wrong content", "Audio issues"].map((issue) => (
-                              <button
-                                key={issue}
-                                onClick={handleReport}
-                                className="w-full text-left px-3 py-2.5 text-xs text-white/70 hover:bg-white/5 hover:text-white transition-colors"
-                              >
-                                {issue}
-                              </button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Fullscreen */}
+                {/* Right: controls */}
+                <div className="flex items-center gap-1">
+                  {/* Source / quality selector */}
+                  <div className="relative" ref={sourceMenuRef}>
                     <button
-                      onClick={toggleFullscreen}
-                      className="p-2 rounded text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                      title="Fullscreen (F)"
+                      onClick={() => { setShowSourceMenu(!showSourceMenu); setShowReportMenu(false); }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-colors"
                     >
-                      {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                      <span className="text-primary font-semibold">{currentSource.quality}</span>
+                      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showSourceMenu ? "rotate-180" : ""}`} />
                     </button>
+
+                    <AnimatePresence>
+                      {showSourceMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 4, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute bottom-full mb-2 right-0 w-48 bg-card border border-border rounded-lg shadow-xl overflow-hidden z-50"
+                        >
+                          <div className="px-3 py-2 border-b border-border">
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Select Source</p>
+                          </div>
+                          {sources.map((source, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => handleSourceChange(idx)}
+                              className={`w-full flex items-center justify-between px-3 py-2.5 text-xs transition-colors ${
+                                idx === activeServer
+                                  ? "bg-primary/10 text-primary"
+                                  : "text-foreground hover:bg-secondary"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                {idx === activeServer && <Check className="h-3.5 w-3.5 text-primary" />}
+                                <span className={idx === activeServer ? "font-semibold" : ""}>{source.name}</span>
+                              </div>
+                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                                source.quality === "1080p"
+                                  ? "bg-primary/20 text-primary"
+                                  : "bg-muted text-muted-foreground"
+                              }`}>
+                                {source.quality}
+                              </span>
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
+
+                  {/* Report issue */}
+                  <div className="relative" ref={reportMenuRef}>
+                    <button
+                      onClick={() => { setShowReportMenu(!showReportMenu); setShowSourceMenu(false); }}
+                      className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                      title="Report issue"
+                    >
+                      <Flag className="h-4 w-4" />
+                    </button>
+
+                    <AnimatePresence>
+                      {showReportMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 4, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute bottom-full mb-2 right-0 w-52 bg-card border border-border rounded-lg shadow-xl overflow-hidden z-50"
+                        >
+                          <div className="px-3 py-2 border-b border-border">
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Report Issue</p>
+                          </div>
+                          {["Not playing", "Bad quality", "Wrong content", "Audio issues"].map((issue) => (
+                            <button
+                              key={issue}
+                              onClick={handleReport}
+                              className="w-full text-left px-3 py-2.5 text-xs text-foreground hover:bg-secondary transition-colors"
+                            >
+                              {issue}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Fullscreen */}
+                  <button
+                    onClick={toggleFullscreen}
+                    className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                    title="Fullscreen (F)"
+                  >
+                    {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                  </button>
                 </div>
               </div>
             </motion.div>
