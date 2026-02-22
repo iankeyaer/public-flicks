@@ -48,7 +48,7 @@ const MovieDetails = () => {
   const trailer = data.videos?.results.find(
     (v) => v.type === "Trailer" && v.site === "YouTube"
   );
-  const cast = data.credits?.cast.slice(0, 6) || [];
+  
   const sources = getStreamingSources(mediaType, data.id, selectedSeason, selectedEpisode);
 
   return (
@@ -148,29 +148,6 @@ const MovieDetails = () => {
               </button>
             </div>
 
-            {/* Cast */}
-            {cast.length > 0 && (
-              <div className="mb-6">
-                <h3 className="font-display text-lg tracking-wide text-foreground mb-2">Cast</h3>
-                <div className="flex flex-wrap gap-3">
-                  {cast.map((c) => (
-                    <div key={c.id} className="flex items-center gap-2 bg-secondary rounded-lg px-3 py-2">
-                      {c.profile_path && (
-                        <img
-                          src={getImageUrl(c.profile_path, "w92")}
-                          alt={c.name}
-                          className="h-8 w-8 rounded-full object-cover"
-                        />
-                      )}
-                      <div>
-                        <p className="text-xs font-medium text-foreground">{c.name}</p>
-                        <p className="text-[10px] text-muted-foreground">{c.character}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
