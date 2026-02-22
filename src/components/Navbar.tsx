@@ -1,14 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, X, Film, User, LogOut, Clock, MessageSquare } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { searchMulti, getImageUrl } from "@/lib/tmdb";
 
 const Navbar = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 200);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const { data: suggestions } = useQuery({
+    queryKey: ["search-suggestions", debouncedQuery],
+    queryFn: () => searchMulti(debouncedQuery),
+    enabled: debouncedQuery.length > 0,
+  });
+
+  const topResults = (suggestions?.results || [])
+    .filter((r: any) => r.media_type === "movie" || r.media_type === "tv")
+    .slice(0, 5);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,18 +71,50 @@ const Navbar = () => {
 
         <div className="flex items-center gap-3">
           {searchOpen ? (
-            <form onSubmit={handleSearch} className="flex items-center gap-2 animate-fade-in">
-              <input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search movies & shows..."
-                className="w-48 md:w-64 rounded-md border border-border bg-secondary px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <button type="button" onClick={() => { setSearchOpen(false); setQuery(""); }}>
-                <X className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-              </button>
-            </form>
+            <div ref={searchRef} className="relative animate-fade-in">
+              <form onSubmit={handleSearch} className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  value={query}
+                  onChange={(e) => { setQuery(e.target.value); setShowSuggestions(true); }}
+                  onFocus={() => setShowSuggestions(true)}
+                  placeholder="Search movies & shows..."
+                  className="w-48 md:w-64 rounded-md border border-border bg-secondary px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <button type="button" onClick={() => { setSearchOpen(false); setQuery(""); setShowSuggestions(false); }}>
+                  <X className="h-5 w-5 text-muted-foreground hover:text-foreground" />
+                </button>
+              </form>
+              {showSuggestions && topResults.length > 0 && (
+                <div className="absolute right-0 top-10 w-72 md:w-80 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden">
+                  {topResults.map((item: any) => (
+                    <Link
+                      key={item.id}
+                      to={`/${item.media_type}/${item.id}`}
+                      onClick={() => { setSearchOpen(false); setQuery(""); setShowSuggestions(false); }}
+                      className="flex items-center gap-3 px-3 py-2 hover:bg-secondary transition-colors"
+                    >
+                      <img
+                        src={getImageUrl(item.poster_path, "w92")}
+                        alt={item.title || item.name}
+                        className="w-10 h-14 rounded object-cover bg-muted flex-shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{item.title || item.name}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{item.media_type} · {(item.release_date || item.first_air_date || "").slice(0, 4)}</p>
+                      </div>
+                    </Link>
+                  ))}
+                  <Link
+                    to={`/search?q=${encodeURIComponent(query)}`}
+                    onClick={() => { setSearchOpen(false); setQuery(""); setShowSuggestions(false); }}
+                    className="block text-center text-xs text-primary py-2 border-t border-border hover:bg-secondary transition-colors"
+                  >
+                    View all results
+                  </Link>
+                </div>
+              )}
+            </div>
           ) : (
             <button onClick={() => setSearchOpen(true)} className="p-2 rounded-full hover:bg-secondary transition-colors">
               <Search className="h-5 w-5 text-foreground" />
