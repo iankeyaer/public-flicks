@@ -89,10 +89,15 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
 
       <div className="relative aspect-video bg-card rounded-lg overflow-hidden border border-border">
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-card z-10">
-            <div className="text-center">
-              <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground">Loading...</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background z-10">
+            <div className="text-center space-y-4">
+              <div className="relative">
+                <div className="h-12 w-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin mx-auto" />
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium text-foreground">Loading your stream</p>
+                <p className="text-xs text-muted-foreground">Please be patient, this may take a moment...</p>
+              </div>
             </div>
           </div>
         )}
