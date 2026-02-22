@@ -53,7 +53,7 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-background/95 to-background/0 backdrop-blur-sm">
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
         <Link to="/" className="flex items-center gap-2">
-          <Film className="h-7 w-7 text-primary" />
+          
           <span className="text-2xl font-bold tracking-wide text-foreground" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
             ZIV<span className="text-primary">ORA</span>
           </span>
