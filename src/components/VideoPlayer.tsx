@@ -115,7 +115,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
           key={iframeKey}
           src={currentSource.url}
           title={title}
-          className="w-full h-full border-0"
+          className={`w-full h-full border-0 ${loading ? 'opacity-0' : 'opacity-100'}`}
           allowFullScreen
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           onLoad={() => setLoading(false)}
