@@ -210,7 +210,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
                 <div className="text-center space-y-4">
                   <div className="h-12 w-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin mx-auto" />
                   <div className="space-y-1.5">
-                    <p className="text-sm font-medium text-foreground">Loading your stream</p>
+                    <p className="text-sm font-medium text-foreground">Loading</p>
                     <p className="text-xs text-muted-foreground">Please be patient, this may take a moment...</p>
                   </div>
                 </div>
