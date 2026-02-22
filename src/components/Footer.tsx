@@ -9,11 +9,6 @@ const Footer = () => (
           LEON<span className="text-primary">AX</span>
         </span>
       </div>
-      <p className="text-xs text-muted-foreground max-w-2xl mb-4">
-        <strong className="text-primary">Legal Disclaimer:</strong> This app only links to publicly available free sources. 
-        We do not host, upload, or store any video files on our servers. Streaming copyrighted content may be illegal in your country. 
-        Use at your own risk. All movie metadata provided by TMDB.
-      </p>
       <p className="text-xs text-muted-foreground">
         © {new Date().getFullYear()} Leonax. This product uses the TMDB API but is not endorsed or certified by TMDB.
       </p>
