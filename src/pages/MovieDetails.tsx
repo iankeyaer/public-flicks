@@ -4,8 +4,9 @@ import { getDetails, getImageUrl, getStreamingSources } from "@/lib/tmdb";
 import { MovieDetails as MovieDetailsType } from "@/types/movie";
 import VideoPlayer from "@/components/VideoPlayer";
 import MovieSection from "@/components/MovieSection";
-import { Star, Clock, Calendar, Loader2, Flag } from "lucide-react";
+import { Star, Clock, Calendar, Loader2, Flag, Heart } from "lucide-react";
 import { useState } from "react";
+import { useFavorites } from "@/hooks/use-favorites";
 
 const MovieDetails = () => {
   const { type, id } = useParams<{ type: string; id: string }>();
@@ -13,6 +14,7 @@ const MovieDetails = () => {
   const [showPlayer, setShowPlayer] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   const { data, isLoading, error } = useQuery<MovieDetailsType>({
     queryKey: ["details", mediaType, id],
@@ -113,8 +115,19 @@ const MovieDetails = () => {
               >
                 ▶ Watch Now
               </button>
+              <button
+                onClick={() => toggleFavorite({ id: data.id, title: data.title, name: data.name, poster_path: data.poster_path, backdrop_path: data.backdrop_path, overview: data.overview || "", vote_average: data.vote_average, release_date: data.release_date, first_air_date: data.first_air_date, media_type: mediaType, genre_ids: data.genres?.map(g => g.id) || [], popularity: 0 })}
+                className={`flex items-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold transition-colors ${
+                  isFavorite(data.id)
+                    ? "bg-primary/20 text-primary border border-primary/40"
+                    : "bg-secondary text-secondary-foreground hover:bg-accent"
+                }`}
+              >
+                <Heart className={`h-4 w-4 ${isFavorite(data.id) ? "fill-primary text-primary" : ""}`} />
+                {isFavorite(data.id) ? "Favorited" : "Add to Favorites"}
+              </button>
               <button className="flex items-center gap-2 rounded-md bg-secondary px-4 py-2.5 text-sm text-secondary-foreground hover:bg-accent transition-colors">
-                <Flag className="h-4 w-4" /> Report Broken Link
+                <Flag className="h-4 w-4" /> Report
               </button>
             </div>
 
