@@ -37,7 +37,13 @@ const MovieCard = ({ movie, index = 0 }: MovieCardProps) => {
         </div>
       </div>
       <p className="text-xs font-medium text-foreground mt-1.5 line-clamp-1">{title}</p>
-      {year && <p className="text-[10px] text-muted-foreground">{year}</p>}
+      <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex items-center gap-1">
+          <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+          <span className="text-[11px] font-medium text-foreground">{movie.vote_average.toFixed(1)}</span>
+        </div>
+        {year && <span className="text-[10px] text-muted-foreground">· {year}</span>}
+      </div>
     </Link>
   );
 };
