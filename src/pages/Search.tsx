@@ -15,14 +15,14 @@ const Search = () => {
     const timer = setTimeout(() => {
       setDebouncedQuery(query);
       if (query) setSearchParams({ q: query });
-    }, 400);
+    }, 200);
     return () => clearTimeout(timer);
   }, [query, setSearchParams]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["search", debouncedQuery],
     queryFn: () => searchMulti(debouncedQuery),
-    enabled: debouncedQuery.length > 1,
+    enabled: debouncedQuery.length > 0,
   });
 
   const results = (data?.results || []).filter(
