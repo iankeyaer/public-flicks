@@ -5,12 +5,12 @@ const DisclaimerBanner = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem("freeflix-disclaimer");
+    const dismissed = localStorage.getItem("vibix-disclaimer");
     if (!dismissed) setVisible(true);
   }, []);
 
   const dismiss = () => {
-    localStorage.setItem("freeflix-disclaimer", "true");
+    localStorage.setItem("vibix-disclaimer", "true");
     setVisible(false);
   };
 

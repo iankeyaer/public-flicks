@@ -26,8 +26,9 @@ const Index = () => {
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="text-center max-w-md">
           <h2 className="font-display text-3xl text-foreground mb-3">API Key Required</h2>
+          {/* Vibix needs a TMDB API key to fetch movie data */}
           <p className="text-muted-foreground text-sm mb-4">
-            To use FreeFlix Hub, you need a free TMDB API key.
+            To use Vibix, you need a free TMDB API key.
           </p>
           <ol className="text-left text-sm text-muted-foreground space-y-2">
             <li>1. Go to <a href="https://www.themoviedb.org/signup" target="_blank" rel="noreferrer" className="text-primary underline">themoviedb.org</a> and create a free account</li>
