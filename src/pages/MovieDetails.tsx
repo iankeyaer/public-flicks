@@ -4,9 +4,12 @@ import { getDetails, getImageUrl, getStreamingSources } from "@/lib/tmdb";
 import { MovieDetails as MovieDetailsType } from "@/types/movie";
 import VideoPlayer from "@/components/VideoPlayer";
 import MovieSection from "@/components/MovieSection";
+import ReviewSection from "@/components/ReviewSection";
 import { Star, Clock, Calendar, Loader2, Flag, Heart } from "lucide-react";
 import { useState } from "react";
 import { useFavorites } from "@/hooks/use-favorites";
+import { useWatchHistory } from "@/hooks/use-watch-history";
+import { useAuth } from "@/contexts/AuthContext";
 
 const MovieDetails = () => {
   const { type, id } = useParams<{ type: string; id: string }>();
@@ -15,6 +18,8 @@ const MovieDetails = () => {
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { addToHistory } = useWatchHistory();
+  const { user } = useAuth();
 
   const { data, isLoading, error } = useQuery<MovieDetailsType>({
     queryKey: ["details", mediaType, id],
@@ -110,7 +115,19 @@ const MovieDetails = () => {
 
             <div className="flex flex-wrap gap-3 mb-6">
               <button
-                onClick={() => setShowPlayer(true)}
+                onClick={() => {
+                  setShowPlayer(true);
+                  if (user) {
+                    addToHistory.mutate({
+                      tmdb_id: data.id,
+                      media_type: mediaType,
+                      title,
+                      poster_path: data.poster_path,
+                      season: mediaType === "tv" ? selectedSeason : undefined,
+                      episode: mediaType === "tv" ? selectedEpisode : undefined,
+                    });
+                  }
+                }}
                 className="flex items-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 ▶ Watch Now
@@ -218,6 +235,9 @@ const MovieDetails = () => {
             </div>
           </div>
         )}
+
+        {/* Reviews */}
+        <ReviewSection tmdbId={data.id} mediaType={mediaType} />
 
         {/* Similar */}
         {data.similar?.results && data.similar.results.length > 0 && (

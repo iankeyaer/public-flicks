@@ -14,7 +14,167 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      movie_requests: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          status: string
+          title: string
+          tmdb_id: number | null
+          user_id: string
+          votes: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          title: string
+          tmdb_id?: number | null
+          user_id: string
+          votes?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          title?: string
+          tmdb_id?: number | null
+          user_id?: string
+          votes?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      request_votes: {
+        Row: {
+          created_at: string
+          id: string
+          request_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          request_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          request_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_votes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "movie_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          media_type: string
+          rating: number | null
+          tmdb_id: number
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          media_type: string
+          rating?: number | null
+          tmdb_id: number
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          media_type?: string
+          rating?: number | null
+          tmdb_id?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      watch_history: {
+        Row: {
+          duration_seconds: number | null
+          episode: number | null
+          id: string
+          media_type: string
+          poster_path: string | null
+          progress_seconds: number | null
+          season: number | null
+          title: string
+          tmdb_id: number
+          user_id: string
+          watched_at: string
+        }
+        Insert: {
+          duration_seconds?: number | null
+          episode?: number | null
+          id?: string
+          media_type: string
+          poster_path?: string | null
+          progress_seconds?: number | null
+          season?: number | null
+          title: string
+          tmdb_id: number
+          user_id: string
+          watched_at?: string
+        }
+        Update: {
+          duration_seconds?: number | null
+          episode?: number | null
+          id?: string
+          media_type?: string
+          poster_path?: string | null
+          progress_seconds?: number | null
+          season?: number | null
+          title?: string
+          tmdb_id?: number
+          user_id?: string
+          watched_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
