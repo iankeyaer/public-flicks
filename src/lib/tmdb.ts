@@ -49,13 +49,6 @@ export const getStreamingSources = (
 
   return [
     {
-      name: "VidBinge",
-      quality: "1080p",
-      url: type === "movie"
-        ? `https://vidbinge.dev/embed/movie/${tmdbId}`
-        : `https://vidbinge.dev/embed/tv/${tmdbId}/${s}/${e}`,
-    },
-    {
       name: "AutoEmbed",
       quality: "1080p",
       url: type === "movie"
@@ -63,7 +56,14 @@ export const getStreamingSources = (
         : `https://player.autoembed.cc/embed/tv/${tmdbId}/${s}/${e}`,
     },
     {
-      name: "VidSrc Pro",
+      name: "SuperEmbed",
+      quality: "1080p",
+      url: type === "movie"
+        ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`
+        : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${s}&e=${e}`,
+    },
+    {
+      name: "VidSrc",
       quality: "1080p",
       url: type === "movie"
         ? `https://vidsrc.to/embed/movie/${tmdbId}`
@@ -75,6 +75,13 @@ export const getStreamingSources = (
       url: type === "movie"
         ? `https://embed.su/embed/movie/${tmdbId}`
         : `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`,
+    },
+    {
+      name: "VidBinge",
+      quality: "HD",
+      url: type === "movie"
+        ? `https://vidbinge.dev/embed/movie/${tmdbId}`
+        : `https://vidbinge.dev/embed/tv/${tmdbId}/${s}/${e}`,
     },
   ];
 };
