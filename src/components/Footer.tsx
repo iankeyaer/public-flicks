@@ -5,8 +5,8 @@ const Footer = () => (
     <div className="container mx-auto">
       <div className="flex items-center gap-2 mb-4">
         
-        <span className="text-lg font-bold tracking-wide text-foreground" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
-          ZIV<span className="text-primary">ORA</span>
+        <span className="text-lg font-extrabold tracking-tight text-foreground lowercase" style={{ fontFamily: "'Nunito', sans-serif" }}>
+          ziv<span className="text-primary">ora</span>
         </span>
       </div>
       <p className="text-xs text-muted-foreground">
