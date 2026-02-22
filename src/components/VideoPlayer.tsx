@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Loader2, AlertCircle, Server, ExternalLink } from "lucide-react";
+import { Loader2, AlertCircle, Server, ExternalLink, ShieldCheck } from "lucide-react";
 import { StreamSource } from "@/types/movie";
 
 interface VideoPlayerProps {
@@ -12,6 +12,9 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
+  const [showAdTip, setShowAdTip] = useState(() => {
+    return !localStorage.getItem("hideAdTip");
+  });
 
   useEffect(() => {
     setLoading(true);
@@ -37,6 +40,11 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
     setActiveServer(index);
   };
 
+  const dismissAdTip = () => {
+    setShowAdTip(false);
+    localStorage.setItem("hideAdTip", "1");
+  };
+
   if (!sources.length) {
     return (
       <div className="aspect-video bg-secondary rounded-lg flex items-center justify-center">
@@ -52,6 +60,33 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
 
   return (
     <div>
+      {/* Adblocker recommendation */}
+      {showAdTip && (
+        <div className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-primary/10 border border-primary/20 px-4 py-2.5">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-primary flex-shrink-0" />
+            <p className="text-xs text-foreground/80">
+              For the cleanest experience, install{" "}
+              <a
+                href="https://ublockorigin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary font-medium hover:underline"
+              >
+                uBlock Origin
+              </a>{" "}
+              — it blocks all ads from embed players.
+            </p>
+          </div>
+          <button
+            onClick={dismissAdTip}
+            className="text-xs text-muted-foreground hover:text-foreground flex-shrink-0"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       <div className="relative aspect-video bg-card rounded-lg overflow-hidden border border-border">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-card z-10">
@@ -82,7 +117,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           onLoad={handleLoad}
           onError={handleError}
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-presentation"
           referrerPolicy="no-referrer"
           style={{ border: 0 }}
         />

@@ -56,11 +56,11 @@ export const getStreamingSources = (
         : `https://vidsrc.pro/embed/tv/${tmdbId}/${s}/${e}`,
     },
     {
-      name: "CineSrc",
+      name: "VidSrc CC",
       quality: "1080p",
       url: type === "movie"
-        ? `https://cinesrc.st/embed/movie/${tmdbId}`
-        : `https://cinesrc.st/embed/tv/${tmdbId}/${s}/${e}`,
+        ? `https://vidsrc.cc/v2/embed/movie/${tmdbId}`
+        : `https://vidsrc.cc/v2/embed/tv/${tmdbId}/${s}/${e}`,
     },
     {
       name: "VidBinge",
