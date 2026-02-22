@@ -5,7 +5,7 @@ const Footer = () => (
     <div className="container mx-auto">
       <div className="flex items-center gap-2 mb-4">
         <Film className="h-5 w-5 text-primary" />
-        <span className="font-display text-lg tracking-wider text-foreground">
+        <span className="text-lg font-bold tracking-wide text-foreground" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
           ZIV<span className="text-primary">ORA</span>
         </span>
       </div>
