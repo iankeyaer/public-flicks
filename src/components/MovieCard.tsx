@@ -16,7 +16,7 @@ const MovieCard = ({ movie, index = 0 }: MovieCardProps) => {
   return (
     <Link
       to={`/${type}/${movie.id}`}
-      className="group relative flex-shrink-0 w-36 md:w-44 transition-transform duration-300 hover:scale-105 hover:z-10"
+      className="group relative flex-shrink-0 w-32 sm:w-36 md:w-44 lg:w-48 2xl:w-56 transition-transform duration-300 hover:scale-105 hover:z-10"
       style={{ animationDelay: `${index * 50}ms` }}
     >
       <div className="aspect-[2/3] bg-secondary rounded-lg overflow-hidden">
@@ -36,13 +36,13 @@ const MovieCard = ({ movie, index = 0 }: MovieCardProps) => {
           </div>
         </div>
       </div>
-      <p className="text-xs font-medium text-foreground mt-1.5 line-clamp-1">{title}</p>
+      <p className="text-[11px] sm:text-xs 2xl:text-sm font-medium text-foreground mt-1.5 line-clamp-1">{title}</p>
       <div className="flex items-center gap-2 mt-0.5">
         <div className="flex items-center gap-1">
           <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-          <span className="text-[11px] font-medium text-foreground">{movie.vote_average.toFixed(1)}</span>
+          <span className="text-[10px] sm:text-[11px] 2xl:text-xs font-medium text-foreground">{movie.vote_average.toFixed(1)}</span>
         </div>
-        {year && <span className="text-[10px] text-muted-foreground">· {year}</span>}
+        {year && <span className="text-[10px] 2xl:text-xs text-muted-foreground">· {year}</span>}
       </div>
     </Link>
   );

@@ -23,7 +23,7 @@ const MovieSection = ({ title, movies }: MovieSectionProps) => {
   if (!movies.length) return null;
 
   return (
-    <section className="relative px-4 md:px-12 mb-8">
+    <section className="relative px-3 sm:px-4 md:px-12 mb-6 md:mb-8">
       <h2 className="font-display text-xl md:text-2xl tracking-wide text-foreground mb-3">
         {title}
       </h2>
@@ -34,7 +34,7 @@ const MovieSection = ({ title, movies }: MovieSectionProps) => {
         >
           <ChevronLeft className="h-6 w-6 text-foreground" />
         </button>
-        <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide py-1">
+        <div ref={scrollRef} className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide py-1 snap-x snap-mandatory">
           {movies.map((movie, i) => (
             <MovieCard key={movie.id} movie={movie} index={i} />
           ))}
