@@ -23,10 +23,23 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
     setShowFallback(false);
     setIframeKey((k) => k + 1);
 
-    // Only show fallback after 15s if still loading
-    const timer = setTimeout(() => setShowFallback(true), 15000);
-    return () => clearTimeout(timer);
-  }, [activeServer]);
+    // Auto-advance to next server if loading takes too long
+    const loadTimer = setTimeout(() => {
+      if (activeServer < sources.length - 1) {
+        setActiveServer((prev) => prev + 1);
+      } else {
+        setShowFallback(true);
+      }
+    }, 12000);
+
+    // Show fallback hint after 20s
+    const fallbackTimer = setTimeout(() => setShowFallback(true), 20000);
+
+    return () => {
+      clearTimeout(loadTimer);
+      clearTimeout(fallbackTimer);
+    };
+  }, [activeServer, sources.length]);
 
   const handleLoad = () => {
     setLoading(false);
@@ -122,9 +135,8 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
           className="w-full h-full border-0"
           allowFullScreen
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-          onLoad={handleLoad}
+          onLoad={() => { setLoading(false); setShowFallback(false); }}
           onError={handleError}
-          sandbox="allow-same-origin allow-scripts allow-forms allow-presentation"
           referrerPolicy="no-referrer"
           style={{ border: 0 }}
         />
