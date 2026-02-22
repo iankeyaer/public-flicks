@@ -45,7 +45,15 @@ export type Database = {
           user_id?: string
           votes?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "movie_requests_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -131,7 +139,15 @@ export type Database = {
           tmdb_id?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reviews_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       watch_history: {
         Row: {
@@ -173,7 +189,15 @@ export type Database = {
           user_id?: string
           watched_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "watch_history_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Views: {
