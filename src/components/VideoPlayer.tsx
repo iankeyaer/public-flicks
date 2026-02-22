@@ -254,13 +254,13 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
             key={iframeKey}
             src={currentSource.url}
             title={title}
-            className={`w-full h-full border-0 bg-black transition-opacity duration-500 ${showLoading ? "opacity-0" : "opacity-100"}`}
+            className={`w-full h-full border-0 transition-opacity duration-500 ${showLoading ? "opacity-0" : "opacity-100"}`}
             allowFullScreen
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             onLoad={() => setIframeLoaded(true)}
             onError={handleError}
             referrerPolicy="no-referrer"
-            style={{ border: 0 }}
+            style={{ border: 0, background: '#000', colorScheme: 'dark' }}
           />
         </div>
 
