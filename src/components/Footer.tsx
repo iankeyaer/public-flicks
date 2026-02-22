@@ -6,11 +6,11 @@ const Footer = () => (
       <div className="flex items-center gap-2 mb-4">
         <Film className="h-5 w-5 text-primary" />
         <span className="font-display text-lg tracking-wider text-foreground">
-          LEON<span className="text-primary">AX</span>
+          ZIV<span className="text-primary">ORA</span>
         </span>
       </div>
       <p className="text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Leonax. This product uses the TMDB API but is not endorsed or certified by TMDB.
+        © {new Date().getFullYear()} Zivora. This product uses the TMDB API but is not endorsed or certified by TMDB.
       </p>
     </div>
   </footer>
