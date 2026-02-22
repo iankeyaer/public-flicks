@@ -5,7 +5,7 @@ const Footer = () => (
     <div className="container mx-auto">
       <div className="flex items-center gap-2 mb-4">
         
-        <span className="text-lg font-bold tracking-wide text-foreground" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
+        <span className="text-lg font-bold tracking-wide text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
           ZIV<span className="text-primary">ORA</span>
         </span>
       </div>
