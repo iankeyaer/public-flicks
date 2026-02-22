@@ -1,5 +1,5 @@
 // ⚠️ Replace with your own TMDB API key from https://www.themoviedb.org/settings/api
-const API_KEY = "REPLACE_WITH_YOUR_TMDB_API_KEY";
+const API_KEY = "a1ec41d73036e72bad73615169e10c23";
 const BASE_URL = "https://api.themoviedb.org/3";
 export const IMG_BASE = "https://image.tmdb.org/t/p";
 
