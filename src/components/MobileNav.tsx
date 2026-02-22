@@ -1,18 +1,19 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Grid3X3, Heart } from "lucide-react";
+import { Home, Search, Grid3X3, Heart, MessageSquare } from "lucide-react";
 
 const navItems = [
   { to: "/", icon: Home, label: "Home" },
   { to: "/search", icon: Search, label: "Search" },
   { to: "/categories", icon: Grid3X3, label: "Categories" },
   { to: "/favorites", icon: Heart, label: "Favorites" },
+  { to: "/requests", icon: MessageSquare, label: "Requests" },
 ];
 
 const MobileNav = () => {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-md md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-md md:hidden safe-bottom">
       <div className="flex items-center justify-around py-2">
         {navItems.map(({ to, icon: Icon, label }) => {
           const active = location.pathname === to;

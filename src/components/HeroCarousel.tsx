@@ -25,7 +25,7 @@ const HeroCarousel = ({ movies }: HeroCarouselProps) => {
   const type = movie.media_type === "tv" || movie.name ? "tv" : "movie";
 
   return (
-    <div className="relative h-[70vh] md:h-[85vh] w-full overflow-hidden">
+    <div className="relative h-[60vh] sm:h-[70vh] md:h-[85vh] 2xl:h-[90vh] w-full overflow-hidden">
       <AnimatePresence mode="wait">
         <motion.div
           key={movie.id}
@@ -45,17 +45,17 @@ const HeroCarousel = ({ movies }: HeroCarouselProps) => {
         </motion.div>
       </AnimatePresence>
 
-      <div className="absolute bottom-16 md:bottom-24 left-0 px-4 md:px-12 max-w-2xl z-10">
+      <div className="absolute bottom-20 sm:bottom-16 md:bottom-24 left-0 px-4 md:px-12 max-w-2xl z-10">
         <motion.div
           key={movie.id + "-text"}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl tracking-wide text-foreground text-shadow-hero mb-3">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-6xl lg:text-7xl 2xl:text-8xl tracking-wide text-foreground text-shadow-hero mb-2 sm:mb-3">
             {movie.title || movie.name}
           </h1>
-          <p className="text-sm md:text-base text-foreground/80 line-clamp-3 mb-5 max-w-lg">
+          <p className="text-xs sm:text-sm md:text-base 2xl:text-lg text-foreground/80 line-clamp-2 sm:line-clamp-3 mb-4 sm:mb-5 max-w-lg">
             {movie.overview}
           </p>
           <div className="flex gap-3">
