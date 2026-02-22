@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   AlertCircle,
-  ShieldCheck,
   Maximize,
   Minimize,
   MonitorPlay,
@@ -29,7 +28,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
   const [showReportMenu, setShowReportMenu] = useState(false);
   const [reported, setReported] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const [showAdTip, setShowAdTip] = useState(() => !localStorage.getItem("hideAdTip"));
+  const showAdTip = false;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -51,7 +50,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
       if (activeServer < sources.length - 1) {
         setActiveServer((prev) => prev + 1);
       }
-    }, 12000);
+    }, 10000);
 
     return () => {
       clearTimeout(minTimer);
@@ -139,10 +138,6 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
     }
   };
 
-  const dismissAdTip = () => {
-    setShowAdTip(false);
-    localStorage.setItem("hideAdTip", "1");
-  };
 
   if (!sources.length) {
     return (
@@ -159,35 +154,6 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
 
   return (
     <div className="space-y-3">
-      {/* Ad tip */}
-      <AnimatePresence>
-        {showAdTip && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="flex items-center justify-between gap-3 rounded-xl bg-primary/10 border border-primary/20 px-4 py-2.5"
-          >
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary flex-shrink-0" />
-              <p className="text-xs text-foreground/80">
-                For the best experience, use an{" "}
-                <a
-                  href="https://ublockorigin.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary font-medium hover:underline"
-                >
-                  adblocker
-                </a>.
-              </p>
-            </div>
-            <button onClick={dismissAdTip} className="text-xs text-muted-foreground hover:text-foreground flex-shrink-0">
-              Dismiss
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Player container */}
       <div
@@ -210,8 +176,10 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
                 <div className="text-center space-y-4">
                   <div className="h-12 w-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin mx-auto" />
                   <div className="space-y-1.5">
-                    <p className="text-sm font-medium text-foreground">Loading your stream</p>
-                    <p className="text-xs text-muted-foreground">Please be patient, this may take a moment...</p>
+                    <p className="text-sm font-medium text-foreground">Loading...</p>
+                    <p className="text-xs text-muted-foreground">
+                      {activeServer > 0 ? `Trying server ${activeServer + 1}...` : "Please wait..."}
+                    </p>
                   </div>
                 </div>
               </motion.div>
