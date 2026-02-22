@@ -6,7 +6,7 @@ const Footer = () => (
       <div className="flex items-center gap-2 mb-4">
         <Film className="h-5 w-5 text-primary" />
         <span className="font-display text-lg tracking-wider text-foreground">
-          VI<span className="text-primary">BIX</span>
+          LEON<span className="text-primary">AX</span>
         </span>
       </div>
       <p className="text-xs text-muted-foreground max-w-2xl mb-4">
@@ -15,7 +15,7 @@ const Footer = () => (
         Use at your own risk. All movie metadata provided by TMDB.
       </p>
       <p className="text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Vibix. This product uses the TMDB API but is not endorsed or certified by TMDB.
+        © {new Date().getFullYear()} Leonax. This product uses the TMDB API but is not endorsed or certified by TMDB.
       </p>
     </div>
   </footer>
