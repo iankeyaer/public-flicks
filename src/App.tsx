@@ -7,7 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import MobileNav from "@/components/MobileNav";
 import Footer from "@/components/Footer";
-import DisclaimerBanner from "@/components/DisclaimerBanner";
+
 import Index from "./pages/Index";
 import MovieDetails from "./pages/MovieDetails";
 import Search from "./pages/Search";
@@ -48,7 +48,7 @@ const App = () => (
           </Routes>
           <Footer />
           <MobileNav />
-          <DisclaimerBanner />
+          
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
