@@ -197,7 +197,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
         onTouchStart={resetControlsTimer}
       >
         {/* Video area */}
-        <div className="relative aspect-video">
+        <div className="relative aspect-video bg-black">
           {/* Loading overlay */}
           <AnimatePresence>
             {showLoading && (
@@ -205,7 +205,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
                 initial={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4 }}
-                className="absolute inset-0 flex flex-col items-center justify-center bg-background z-20"
+                className="absolute inset-0 flex flex-col items-center justify-center bg-black z-20"
               >
                 <div className="text-center space-y-4">
                   <div className="h-12 w-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin mx-auto" />
@@ -220,7 +220,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
 
           {/* Error overlay */}
           {error && activeServer >= sources.length - 1 && (
-            <div className="absolute inset-0 flex items-center justify-center bg-background z-20">
+            <div className="absolute inset-0 flex items-center justify-center bg-black z-20">
               <div className="text-center space-y-3">
                 <AlertCircle className="h-8 w-8 text-primary mx-auto" />
                 <p className="text-sm text-muted-foreground">This content is temporarily unavailable.</p>
@@ -254,7 +254,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
             key={iframeKey}
             src={currentSource.url}
             title={title}
-            className={`w-full h-full border-0 transition-opacity duration-500 ${showLoading ? "opacity-0" : "opacity-100"}`}
+            className={`w-full h-full border-0 bg-black transition-opacity duration-500 ${showLoading ? "opacity-0" : "opacity-100"}`}
             allowFullScreen
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             onLoad={() => setIframeLoaded(true)}
