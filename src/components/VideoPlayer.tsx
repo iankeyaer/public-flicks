@@ -12,14 +12,22 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
+  const [minLoadMet, setMinLoadMet] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
   const [showAdTip, setShowAdTip] = useState(() => {
     return !localStorage.getItem("hideAdTip");
   });
 
+  const showLoading = !iframeLoaded || !minLoadMet;
+
   useEffect(() => {
-    setLoading(true);
+    setIframeLoaded(false);
+    setMinLoadMet(false);
     setError(false);
     setIframeKey((k) => k + 1);
+
+    // Minimum loading time so the dark overlay stays visible
+    const minTimer = setTimeout(() => setMinLoadMet(true), 3000);
 
     // Auto-advance to next server if loading takes too long
     const loadTimer = setTimeout(() => {
@@ -28,11 +36,14 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
       }
     }, 12000);
 
-    return () => clearTimeout(loadTimer);
+    return () => {
+      clearTimeout(minTimer);
+      clearTimeout(loadTimer);
+    };
   }, [activeServer, sources.length]);
 
   const handleError = () => {
-    setLoading(false);
+    setIframeLoaded(true);
     setError(true);
     if (activeServer < sources.length - 1) {
       setTimeout(() => {
@@ -87,8 +98,8 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
         </div>
       )}
 
-      <div className="relative aspect-video bg-card rounded-lg overflow-hidden border border-border">
-        {loading && (
+      <div className="relative aspect-video bg-background rounded-lg overflow-hidden border border-border">
+        {showLoading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-background z-10">
             <div className="text-center space-y-4">
               <div className="relative">
@@ -115,10 +126,10 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
           key={iframeKey}
           src={currentSource.url}
           title={title}
-          className={`w-full h-full border-0 ${loading ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full h-full border-0 ${showLoading ? 'opacity-0' : 'opacity-100'}`}
           allowFullScreen
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-          onLoad={() => setLoading(false)}
+          onLoad={() => setIframeLoaded(true)}
           onError={handleError}
           referrerPolicy="no-referrer"
           style={{ border: 0 }}
