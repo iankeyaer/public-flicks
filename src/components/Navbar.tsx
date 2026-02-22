@@ -25,7 +25,7 @@ const Navbar = () => {
         <Link to="/" className="flex items-center gap-2">
           <Film className="h-7 w-7 text-primary" />
           <span className="font-display text-2xl tracking-wider text-foreground">
-            VI<span className="text-primary">BIX</span>
+            LEON<span className="text-primary">AX</span>
           </span>
         </Link>
 
