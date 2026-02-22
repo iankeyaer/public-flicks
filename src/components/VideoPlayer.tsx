@@ -12,6 +12,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
+  const [showFallback, setShowFallback] = useState(false);
   const [showAdTip, setShowAdTip] = useState(() => {
     return !localStorage.getItem("hideAdTip");
   });
@@ -19,11 +20,17 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
   useEffect(() => {
     setLoading(true);
     setError(false);
+    setShowFallback(false);
     setIframeKey((k) => k + 1);
+
+    // Only show fallback after 15s if still loading
+    const timer = setTimeout(() => setShowFallback(true), 15000);
+    return () => clearTimeout(timer);
   }, [activeServer]);
 
   const handleLoad = () => {
     setLoading(false);
+    setShowFallback(false);
   };
 
   const handleError = () => {
@@ -92,7 +99,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
           <div className="absolute inset-0 flex items-center justify-center bg-card z-10">
             <div className="text-center">
               <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground">Loading {currentSource.name}...</p>
+              <p className="text-xs text-muted-foreground">Preparing your stream...</p>
             </div>
           </div>
         )}
@@ -123,20 +130,22 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
         />
       </div>
 
-      {/* Open in new tab fallback */}
-      <div className="mt-2 flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          Player not loading? Try opening in a new tab or switch servers below.
-        </p>
-        <a
-          href={currentSource.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-xs text-primary hover:underline"
-        >
-          Open in new tab <ExternalLink className="h-3 w-3" />
-        </a>
-      </div>
+      {/* Only show fallback after delay */}
+      {showFallback && (
+        <div className="mt-2 flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            Having trouble? Try a different server below.
+          </p>
+          <a
+            href={currentSource.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            Open externally <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      )}
 
       {/* Server List */}
       <div className="mt-3 flex flex-wrap gap-2">
