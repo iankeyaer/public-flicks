@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getTrending, getPopular, getNowPlaying, getTopRated } from "@/lib/tmdb";
 import HeroCarousel from "@/components/HeroCarousel";
 import MovieSection from "@/components/MovieSection";
+import ContinueWatchingSection from "@/components/ContinueWatchingSection";
+import Top10Section from "@/components/Top10Section";
 import { Loader2 } from "lucide-react";
 
 const Index = () => {
@@ -26,7 +28,6 @@ const Index = () => {
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="text-center max-w-md">
           <h2 className="font-display text-3xl text-foreground mb-3">API Key Required</h2>
-          {/* Vibix needs a TMDB API key to fetch movie data */}
           <p className="text-muted-foreground text-sm mb-4">
             To use Vibix, you need a free TMDB API key.
           </p>
@@ -45,6 +46,8 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <HeroCarousel movies={trending.data?.results || []} />
       <div className="-mt-16 relative z-10 space-y-2">
+        <ContinueWatchingSection />
+        <Top10Section />
         <MovieSection title="🔥 Trending Now" movies={trending.data?.results || []} />
         <MovieSection title="🎬 Popular Movies" movies={popular.data?.results || []} />
         <MovieSection title="🆕 New Releases" movies={nowPlaying.data?.results || []} />
