@@ -49,56 +49,35 @@ export const getStreamingSources = (
 
   return [
     {
-      name: "Server 1",
-      quality: "1080p",
-      url: type === "movie"
-        ? `https://vidsrc.to/embed/movie/${tmdbId}`
-        : `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`,
-    },
-    {
-      name: "Server 2",
-      quality: "1080p",
-      url: type === "movie"
-        ? `https://vidsrc.pro/embed/movie/${tmdbId}`
-        : `https://vidsrc.pro/embed/tv/${tmdbId}/${s}/${e}`,
-    },
-    {
-      name: "Server 3",
-      quality: "HD",
-      url: type === "movie"
-        ? `https://embed.su/embed/movie/${tmdbId}`
-        : `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`,
-    },
-    {
-      name: "Server 4",
-      quality: "1080p",
-      url: type === "movie"
-        ? `https://vidsrc.cc/v2/embed/movie/${tmdbId}`
-        : `https://vidsrc.cc/v2/embed/tv/${tmdbId}/${s}/${e}`,
-    },
-    {
-      name: "Server 5",
-      quality: "1080p",
-      url: type === "movie"
-        ? `https://vidsrc.me/embed/movie/${tmdbId}`
-        : `https://vidsrc.me/embed/tv/${tmdbId}/${s}/${e}`,
-    },
-    {
-      name: "Server 6",
-      quality: "HD",
-      url: type === "movie"
-        ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`
-        : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${s}&e=${e}`,
-    },
-    {
-      name: "Server 7",
+      name: "VidBinge",
       quality: "HD",
       url: type === "movie"
         ? `https://vidbinge.dev/embed/movie/${tmdbId}`
         : `https://vidbinge.dev/embed/tv/${tmdbId}/${s}/${e}`,
     },
     {
-      name: "Server 8",
+      name: "Embed SU",
+      quality: "HD",
+      url: type === "movie"
+        ? `https://embed.su/embed/movie/${tmdbId}`
+        : `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`,
+    },
+    {
+      name: "VidSrc Pro",
+      quality: "1080p",
+      url: type === "movie"
+        ? `https://vidsrc.pro/embed/movie/${tmdbId}`
+        : `https://vidsrc.pro/embed/tv/${tmdbId}/${s}/${e}`,
+    },
+    {
+      name: "VidSrc CC",
+      quality: "1080p",
+      url: type === "movie"
+        ? `https://vidsrc.cc/v2/embed/movie/${tmdbId}`
+        : `https://vidsrc.cc/v2/embed/tv/${tmdbId}/${s}/${e}`,
+    },
+    {
+      name: "AutoEmbed",
       quality: "1080p",
       url: type === "movie"
         ? `https://player.autoembed.cc/embed/movie/${tmdbId}`
