@@ -4,13 +4,13 @@ import { getDetails, getImageUrl } from "@/lib/tmdb";
 import { MovieDetails as MovieDetailsType } from "@/types/movie";
 import NativePlayer from "@/components/NativePlayer";
 import MovieSection from "@/components/MovieSection";
-import { supabase } from "@/integrations/supabase/client";
 import ReviewSection from "@/components/ReviewSection";
 import { Star, Clock, Calendar, Loader2, Flag, Heart } from "lucide-react";
 import { useState } from "react";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchHistory } from "@/hooks/use-watch-history";
 import { useAuth } from "@/contexts/AuthContext";
+import { resolveStreams } from "@/lib/stream-resolver";
 
 const MovieDetails = () => {
   const { type, id } = useParams<{ type: string; id: string }>();
@@ -29,25 +29,21 @@ const MovieDetails = () => {
   });
 
   const tmdbId = data?.id;
-  const proxyBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/resolve-stream/proxy`;
+  const proxyBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/resolve-stream`;
 
   const { data: streamData, isLoading: streamsLoading } = useQuery({
     queryKey: ["streams", mediaType, tmdbId, selectedSeason, selectedEpisode],
     queryFn: async () => {
       const movieTitle = data?.title || data?.name || "";
       const year = parseInt((data?.release_date || data?.first_air_date || "0").slice(0, 4), 10);
-      const { data: result, error: fnError } = await supabase.functions.invoke("resolve-stream", {
-        body: {
-          tmdbId: String(tmdbId),
-          mediaType: mediaType === "tv" ? "show" : "movie",
-          title: movieTitle,
-          releaseYear: year,
-          season: mediaType === "tv" ? selectedSeason : undefined,
-          episode: mediaType === "tv" ? selectedEpisode : undefined,
-        },
+      return resolveStreams({
+        tmdbId: String(tmdbId),
+        mediaType,
+        title: movieTitle,
+        releaseYear: year,
+        season: mediaType === "tv" ? selectedSeason : undefined,
+        episode: mediaType === "tv" ? selectedEpisode : undefined,
       });
-      if (fnError) throw fnError;
-      return result;
     },
     enabled: showPlayer && !!tmdbId,
   });
