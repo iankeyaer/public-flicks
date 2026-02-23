@@ -10,7 +10,21 @@ import { useState } from "react";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchHistory } from "@/hooks/use-watch-history";
 import { useAuth } from "@/contexts/AuthContext";
-import { resolveStreams } from "@/lib/stream-resolver";
+import type { StreamResult, FallbackEmbed } from "@/lib/stream-resolver";
+
+function getEmbedSources(tmdbId: string, mediaType: "movie" | "tv", season?: number, episode?: number): StreamResult {
+  const id = tmdbId;
+  const s = season || 1;
+  const e = episode || 1;
+  const embeds: FallbackEmbed[] = [
+    { name: "VidSrc PRO", quality: "1080p", url: mediaType === "movie" ? `https://vidsrc.pro/embed/movie/${id}` : `https://vidsrc.pro/embed/tv/${id}/${s}/${e}` },
+    { name: "VidSrc ICU", quality: "1080p", url: mediaType === "movie" ? `https://vidsrc.icu/embed/movie/${id}` : `https://vidsrc.icu/embed/tv/${id}/${s}/${e}` },
+    { name: "Embed SU", quality: "HD", url: mediaType === "movie" ? `https://embed.su/embed/movie/${id}` : `https://embed.su/embed/tv/${id}/${s}/${e}` },
+    { name: "VidSrc CC", quality: "1080p", url: mediaType === "movie" ? `https://vidsrc.cc/v2/embed/movie/${id}` : `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}` },
+    { name: "VidSrc XYZ", quality: "HD", url: mediaType === "movie" ? `https://vidsrc.xyz/embed/movie/${id}` : `https://vidsrc.xyz/embed/tv/${id}/${s}/${e}` },
+  ];
+  return { streams: [], fallbackEmbeds: embeds };
+}
 
 const MovieDetails = () => {
   const { type, id } = useParams<{ type: string; id: string }>();
@@ -31,22 +45,9 @@ const MovieDetails = () => {
   const tmdbId = data?.id;
   const proxyBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/resolve-stream`;
 
-  const { data: streamData, isLoading: streamsLoading } = useQuery({
-    queryKey: ["streams", mediaType, tmdbId, selectedSeason, selectedEpisode],
-    queryFn: async () => {
-      const movieTitle = data?.title || data?.name || "";
-      const year = parseInt((data?.release_date || data?.first_air_date || "0").slice(0, 4), 10);
-      return resolveStreams({
-        tmdbId: String(tmdbId),
-        mediaType,
-        title: movieTitle,
-        releaseYear: year,
-        season: mediaType === "tv" ? selectedSeason : undefined,
-        episode: mediaType === "tv" ? selectedEpisode : undefined,
-      });
-    },
-    enabled: showPlayer && !!tmdbId,
-  });
+  const streamData: StreamResult | null = showPlayer && tmdbId ? getEmbedSources(
+    String(tmdbId), mediaType, selectedSeason, selectedEpisode
+  ) : null;
 
   if (isLoading) {
     return (
@@ -216,7 +217,7 @@ const MovieDetails = () => {
               streams={streamData?.streams || []}
               fallbackEmbeds={streamData?.fallbackEmbeds || []}
               title={title}
-              isLoading={streamsLoading}
+              isLoading={false}
               proxyBaseUrl={proxyBaseUrl}
             />
           </div>

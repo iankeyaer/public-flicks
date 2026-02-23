@@ -1,25 +1,3 @@
-import {
-  makeProviders,
-  makeStandardFetcher,
-  makeSimpleProxyFetcher,
-  targets,
-  type RunOutput,
-  type ScrapeMedia,
-  type Stream,
-  type FullScraperEvents,
-} from "@movie-web/providers";
-
-const PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/resolve-stream`;
-
-// Route ALL requests through the proxy to avoid CORS issues in the browser
-const proxiedFetcher = makeSimpleProxyFetcher(PROXY_URL, fetch);
-
-const providers = makeProviders({
-  fetcher: proxiedFetcher,
-  proxiedFetcher: proxiedFetcher,
-  target: targets.BROWSER,
-});
-
 export interface ResolvedStream {
   provider: string;
   quality: string;
@@ -40,46 +18,7 @@ export interface StreamResult {
   fallbackEmbeds: FallbackEmbed[];
 }
 
-function extractStreams(result: RunOutput): ResolvedStream[] {
-  const streams: ResolvedStream[] = [];
-  const sourceLabel = result.embedId || result.sourceId || "unknown";
-  const captions = result.stream.captions?.map((c) => ({
-    url: c.url,
-    language: c.language,
-    type: c.type,
-  }));
-
-  if (result.stream.type === "hls") {
-    streams.push({
-      provider: sourceLabel,
-      quality: "auto",
-      url: result.stream.playlist,
-      type: "hls",
-      headers: result.stream.headers,
-      captions,
-    });
-  } else if (result.stream.type === "file") {
-    // File-based: extract each quality
-    const qualityOrder: string[] = ["4k", "1080", "720", "480", "360", "unknown"];
-    for (const q of qualityOrder) {
-      const file = result.stream.qualities[q as keyof typeof result.stream.qualities];
-      if (file) {
-        streams.push({
-          provider: sourceLabel,
-          quality: q === "unknown" ? "HD" : `${q}p`,
-          url: file.url,
-          type: "mp4",
-          headers: result.stream.headers,
-          captions,
-        });
-      }
-    }
-  }
-
-  return streams;
-}
-
-function getFallbackEmbeds(
+function getEmbeds(
   tmdbId: string | number,
   mediaType: "movie" | "tv",
   season?: number,
@@ -91,6 +30,14 @@ function getFallbackEmbeds(
 
   return [
     {
+      name: "VidSrc PRO",
+      quality: "1080p",
+      url:
+        mediaType === "movie"
+          ? `https://vidsrc.pro/embed/movie/${id}`
+          : `https://vidsrc.pro/embed/tv/${id}/${s}/${e}`,
+    },
+    {
       name: "VidSrc ICU",
       quality: "1080p",
       url:
@@ -99,12 +46,12 @@ function getFallbackEmbeds(
           : `https://vidsrc.icu/embed/tv/${id}/${s}/${e}`,
     },
     {
-      name: "VidSrc Pro",
-      quality: "1080p",
+      name: "Embed SU",
+      quality: "HD",
       url:
         mediaType === "movie"
-          ? `https://vidsrc.pro/embed/movie/${id}`
-          : `https://vidsrc.pro/embed/tv/${id}/${s}/${e}`,
+          ? `https://embed.su/embed/movie/${id}`
+          : `https://embed.su/embed/tv/${id}/${s}/${e}`,
     },
     {
       name: "VidSrc CC",
@@ -113,14 +60,6 @@ function getFallbackEmbeds(
         mediaType === "movie"
           ? `https://vidsrc.cc/v2/embed/movie/${id}`
           : `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
-    },
-    {
-      name: "Embed SU",
-      quality: "HD",
-      url:
-        mediaType === "movie"
-          ? `https://embed.su/embed/movie/${id}`
-          : `https://embed.su/embed/tv/${id}/${s}/${e}`,
     },
     {
       name: "VidSrc XYZ",
@@ -142,54 +81,11 @@ export async function resolveStreams(opts: {
   episode?: number;
   onEvent?: (msg: string) => void;
 }): Promise<StreamResult> {
-  const { tmdbId, mediaType, title, releaseYear, season, episode, onEvent } = opts;
+  const { tmdbId, mediaType, season, episode } = opts;
 
-  const media: ScrapeMedia =
-    mediaType === "tv"
-      ? {
-          type: "show" as const,
-          tmdbId: String(tmdbId),
-          title,
-          releaseYear,
-          season: { number: season || 1, tmdbId: String(tmdbId) },
-          episode: { number: episode || 1, tmdbId: String(tmdbId) },
-        }
-      : {
-          type: "movie" as const,
-          tmdbId: String(tmdbId),
-          title,
-          releaseYear,
-        };
-
-  const events: FullScraperEvents = {
-    init: (evt) => onEvent?.(`Checking ${evt.sourceIds.length} sources...`),
-    start: (id) => onEvent?.(`Trying ${id}...`),
-    update: (evt) => onEvent?.(`${evt.id}: ${evt.status}`),
+  // Go directly to iframe embeds — scraping providers block datacenter/cloud IPs
+  return {
+    streams: [],
+    fallbackEmbeds: getEmbeds(tmdbId, mediaType, season, episode),
   };
-
-  try {
-    const result = await providers.runAll({ media, events });
-
-    if (!result) {
-      console.log("[stream-resolver] No streams found from providers");
-      return {
-        streams: [],
-        fallbackEmbeds: getFallbackEmbeds(tmdbId, mediaType, season, episode),
-      };
-    }
-
-    const streams = extractStreams(result);
-    console.log(`[stream-resolver] Resolved ${streams.length} stream(s) from ${result.sourceId}`);
-
-    return {
-      streams,
-      fallbackEmbeds: streams.length === 0 ? getFallbackEmbeds(tmdbId, mediaType, season, episode) : [],
-    };
-  } catch (err) {
-    console.error("[stream-resolver] Error:", err);
-    return {
-      streams: [],
-      fallbackEmbeds: getFallbackEmbeds(tmdbId, mediaType, season, episode),
-    };
-  }
 }
