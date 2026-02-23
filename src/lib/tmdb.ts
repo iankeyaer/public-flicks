@@ -49,35 +49,35 @@ export const getStreamingSources = (
 
   return [
     {
-      name: "VidBinge",
+      name: "Server 1",
       quality: "HD",
       url: type === "movie"
         ? `https://vidbinge.dev/embed/movie/${tmdbId}`
         : `https://vidbinge.dev/embed/tv/${tmdbId}/${s}/${e}`,
     },
     {
-      name: "Embed SU",
+      name: "Server 2",
       quality: "HD",
       url: type === "movie"
         ? `https://embed.su/embed/movie/${tmdbId}`
         : `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`,
     },
     {
-      name: "VidSrc Pro",
+      name: "Server 3",
       quality: "1080p",
       url: type === "movie"
         ? `https://vidsrc.pro/embed/movie/${tmdbId}`
         : `https://vidsrc.pro/embed/tv/${tmdbId}/${s}/${e}`,
     },
     {
-      name: "VidSrc CC",
+      name: "Server 4",
       quality: "1080p",
       url: type === "movie"
         ? `https://vidsrc.cc/v2/embed/movie/${tmdbId}`
         : `https://vidsrc.cc/v2/embed/tv/${tmdbId}/${s}/${e}`,
     },
     {
-      name: "AutoEmbed",
+      name: "Server 5",
       quality: "1080p",
       url: type === "movie"
         ? `https://player.autoembed.cc/embed/movie/${tmdbId}`
