@@ -1,5 +1,1 @@
-{
-  "imports": {
-    "@movie-web/providers": "npm:@movie-web/providers@^2.4.13"
-  }
-}
+{}
