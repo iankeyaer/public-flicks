@@ -1,6 +1,7 @@
 import {
   makeProviders,
   makeStandardFetcher,
+  makeSimpleProxyFetcher,
   targets,
   type RunOutput,
   type ScrapeMedia,
@@ -8,9 +9,14 @@ import {
   type FullScraperEvents,
 } from "@movie-web/providers";
 
-// Initialize providers for BROWSER target — runs on user's device/IP
+const PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/resolve-stream`;
+
+// Route ALL requests through the proxy to avoid CORS issues in the browser
+const proxiedFetcher = makeSimpleProxyFetcher(PROXY_URL, fetch);
+
 const providers = makeProviders({
-  fetcher: makeStandardFetcher(fetch),
+  fetcher: proxiedFetcher,
+  proxiedFetcher: proxiedFetcher,
   target: targets.BROWSER,
 });
 
@@ -85,12 +91,28 @@ function getFallbackEmbeds(
 
   return [
     {
+      name: "VidSrc ICU",
+      quality: "1080p",
+      url:
+        mediaType === "movie"
+          ? `https://vidsrc.icu/embed/movie/${id}`
+          : `https://vidsrc.icu/embed/tv/${id}/${s}/${e}`,
+    },
+    {
       name: "VidSrc Pro",
       quality: "1080p",
       url:
         mediaType === "movie"
           ? `https://vidsrc.pro/embed/movie/${id}`
           : `https://vidsrc.pro/embed/tv/${id}/${s}/${e}`,
+    },
+    {
+      name: "VidSrc CC",
+      quality: "1080p",
+      url:
+        mediaType === "movie"
+          ? `https://vidsrc.cc/v2/embed/movie/${id}`
+          : `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
     },
     {
       name: "Embed SU",
@@ -101,12 +123,12 @@ function getFallbackEmbeds(
           : `https://embed.su/embed/tv/${id}/${s}/${e}`,
     },
     {
-      name: "VidSrc CC",
-      quality: "1080p",
+      name: "VidSrc XYZ",
+      quality: "HD",
       url:
         mediaType === "movie"
-          ? `https://vidsrc.cc/v2/embed/movie/${id}`
-          : `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
+          ? `https://vidsrc.xyz/embed/movie/${id}`
+          : `https://vidsrc.xyz/embed/tv/${id}/${s}/${e}`,
     },
   ];
 }
