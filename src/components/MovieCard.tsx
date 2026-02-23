@@ -16,7 +16,7 @@ const MovieCard = ({ movie, index = 0 }: MovieCardProps) => {
   return (
     <Link
       to={`/${type}/${movie.id}`}
-      className="group relative flex-shrink-0 w-32 sm:w-36 md:w-44 lg:w-48 2xl:w-56 transition-transform duration-300 hover:scale-105 hover:z-10"
+      className="tv-focusable group relative flex-shrink-0 w-32 sm:w-36 md:w-44 lg:w-48 2xl:w-56 transition-transform duration-300 hover:scale-105 hover:z-10 focus:scale-105 focus:z-10"
       style={{ animationDelay: `${index * 50}ms` }}
     >
       <div className="aspect-[2/3] bg-secondary rounded-lg overflow-hidden">

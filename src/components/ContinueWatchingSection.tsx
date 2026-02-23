@@ -20,7 +20,7 @@ const ContinueWatchingSection = () => {
           <Link
             key={`${item.tmdb_id}-${item.media_type}`}
             to={`/${item.media_type}/${item.tmdb_id}`}
-            className="flex-shrink-0 w-40 group"
+            className="tv-focusable flex-shrink-0 w-40 group focus:scale-105 transition-transform"
           >
             <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-card">
               <img
