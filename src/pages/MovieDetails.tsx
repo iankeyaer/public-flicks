@@ -1,9 +1,10 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getDetails, getImageUrl, getStreamingSources } from "@/lib/tmdb";
+import { getDetails, getImageUrl } from "@/lib/tmdb";
 import { MovieDetails as MovieDetailsType } from "@/types/movie";
-import VideoPlayer from "@/components/VideoPlayer";
+import NativePlayer from "@/components/NativePlayer";
 import MovieSection from "@/components/MovieSection";
+import { supabase } from "@/integrations/supabase/client";
 import ReviewSection from "@/components/ReviewSection";
 import { Star, Clock, Calendar, Loader2, Flag, Heart } from "lucide-react";
 import { useState } from "react";
@@ -27,6 +28,26 @@ const MovieDetails = () => {
     enabled: !!id,
   });
 
+  const tmdbId = data?.id;
+  const proxyBaseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/resolve-stream/proxy`;
+
+  const { data: streamData, isLoading: streamsLoading } = useQuery({
+    queryKey: ["streams", mediaType, tmdbId, selectedSeason, selectedEpisode],
+    queryFn: async () => {
+      const { data: result, error: fnError } = await supabase.functions.invoke("resolve-stream", {
+        body: {
+          tmdbId,
+          mediaType,
+          season: mediaType === "tv" ? selectedSeason : undefined,
+          episode: mediaType === "tv" ? selectedEpisode : undefined,
+        },
+      });
+      if (fnError) throw fnError;
+      return result;
+    },
+    enabled: showPlayer && !!tmdbId,
+  });
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -48,8 +69,6 @@ const MovieDetails = () => {
   const trailer = data.videos?.results.find(
     (v) => v.type === "Trailer" && v.site === "YouTube"
   );
-  
-  const sources = getStreamingSources(mediaType, data.id, selectedSeason, selectedEpisode);
 
   return (
     <div className="min-h-screen bg-background">
@@ -193,7 +212,13 @@ const MovieDetails = () => {
               Now Playing: {title}
               {mediaType === "tv" && ` – S${selectedSeason}E${selectedEpisode}`}
             </h3>
-            <VideoPlayer sources={sources} title={title} />
+            <NativePlayer
+              streams={streamData?.streams || []}
+              fallbackEmbeds={streamData?.fallbackEmbeds || []}
+              title={title}
+              isLoading={streamsLoading}
+              proxyBaseUrl={proxyBaseUrl}
+            />
           </div>
         )}
 
