@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, X, User, LogOut, Clock, MessageSquare, Play } from "lucide-react";
+import { Search, X, Film, User, LogOut, Clock, MessageSquare } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { searchMulti, getImageUrl } from "@/lib/tmdb";
@@ -52,10 +52,8 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-background/95 to-background/0 backdrop-blur-sm">
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
-        <Link to="/" className="flex items-center gap-1.5">
-          <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
-            <Play className="h-3.5 w-3.5 text-primary-foreground fill-primary-foreground ml-0.5" />
-          </div>
+        <Link to="/" className="flex items-center gap-2">
+          
           <span className="text-2xl font-extrabold tracking-tight text-foreground lowercase" style={{ fontFamily: "'Nunito', sans-serif" }}>
             ziv<span className="text-primary">ora</span>
           </span>
