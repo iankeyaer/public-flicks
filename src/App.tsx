@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useIsTV, useDpadFocusMode } from "@/hooks/use-tv";
 import Navbar from "@/components/Navbar";
+import TVNavBar from "@/components/TVNavBar";
 import MobileNav from "@/components/MobileNav";
 import Footer from "@/components/Footer";
 
@@ -27,6 +29,32 @@ const queryClient = new QueryClient({
   },
 });
 
+const AppContent = () => {
+  const isTV = useIsTV();
+  useDpadFocusMode();
+
+  return (
+    <>
+      {isTV ? <TVNavBar /> : <Navbar />}
+      <div className={isTV ? "tv-mode" : ""}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/:type/:id" element={<MovieDetails />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/history" element={<WatchHistory />} />
+          <Route path="/requests" element={<Requests />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        {!isTV && <Footer />}
+        {!isTV && <MobileNav />}
+      </div>
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -34,21 +62,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Navbar />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/:type/:id" element={<MovieDetails />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/categories" element={<Categories />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/history" element={<WatchHistory />} />
-            <Route path="/requests" element={<Requests />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Footer />
-          <MobileNav />
-          
+          <AppContent />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

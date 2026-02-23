@@ -61,14 +61,14 @@ const HeroCarousel = ({ movies }: HeroCarouselProps) => {
           <div className="flex gap-3">
             <Link
               to={`/${type}/${movie.id}`}
-              className="flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+              className="tv-focusable flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               <Play className="h-4 w-4 fill-current" />
               Watch Now
             </Link>
             <Link
               to={`/${type}/${movie.id}`}
-              className="flex items-center gap-2 rounded-md bg-secondary/80 px-5 py-2.5 text-sm font-semibold text-secondary-foreground hover:bg-secondary transition-colors backdrop-blur-sm"
+              className="tv-focusable flex items-center gap-2 rounded-md bg-secondary/80 px-5 py-2.5 text-sm font-semibold text-secondary-foreground hover:bg-secondary transition-colors backdrop-blur-sm"
             >
               <Info className="h-4 w-4" />
               More Info

@@ -23,7 +23,7 @@ const Top10Section = () => {
           <Link
             key={movie.id}
             to={`/${movie.media_type || "movie"}/${movie.id}`}
-            className="flex-shrink-0 flex items-end group"
+            className="tv-focusable flex-shrink-0 flex items-end group focus:scale-105 transition-transform"
           >
             <span className="font-display text-[80px] md:text-[100px] leading-none text-foreground/10 -mr-4 z-10 select-none">
               {i + 1}

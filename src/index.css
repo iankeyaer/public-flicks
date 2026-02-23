@@ -74,4 +74,25 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+
+  /* TV / D-pad focus styles */
+  .tv-focusable {
+    @apply outline-none;
+  }
+  .dpad-mode .tv-focusable:focus {
+    @apply ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg;
+    box-shadow: 0 0 20px hsl(213 100% 50% / 0.4);
+    transform: scale(1.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .dpad-mode .tv-focusable:focus-visible {
+    @apply ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg;
+    box-shadow: 0 0 20px hsl(213 100% 50% / 0.4);
+    transform: scale(1.05);
+  }
+
+  /* TV layout adjustments */
+  .tv-mode {
+    padding-left: 5rem; /* offset for TV sidebar nav */
+  }
 }
