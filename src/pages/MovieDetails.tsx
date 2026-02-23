@@ -34,10 +34,14 @@ const MovieDetails = () => {
   const { data: streamData, isLoading: streamsLoading } = useQuery({
     queryKey: ["streams", mediaType, tmdbId, selectedSeason, selectedEpisode],
     queryFn: async () => {
+      const movieTitle = data?.title || data?.name || "";
+      const year = parseInt((data?.release_date || data?.first_air_date || "0").slice(0, 4), 10);
       const { data: result, error: fnError } = await supabase.functions.invoke("resolve-stream", {
         body: {
-          tmdbId,
-          mediaType,
+          tmdbId: String(tmdbId),
+          mediaType: mediaType === "tv" ? "show" : "movie",
+          title: movieTitle,
+          releaseYear: year,
           season: mediaType === "tv" ? selectedSeason : undefined,
           episode: mediaType === "tv" ? selectedEpisode : undefined,
         },
