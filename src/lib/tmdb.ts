@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 // ⚠️ Replace with your own TMDB API key from https://www.themoviedb.org/settings/api
 const API_KEY = "a1ec41d73036e72bad73615169e10c23";
 const BASE_URL = "https://api.themoviedb.org/3";
@@ -44,6 +46,38 @@ export const getStreamingSources = (
   season?: number,
   episode?: number
 ): { name: string; quality: string; url: string }[] => {
-  // Sources will be configured here
+  // Sources are now fetched async via searchYflixSources
   return [];
+};
+
+export const searchYflixSources = async (
+  title: string,
+  type: "movie" | "tv",
+  year?: string,
+  season?: number,
+  episode?: number
+): Promise<{ name: string; quality: string; url: string }[]> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('yflix-search', {
+      body: { title, type, year },
+    });
+
+    if (error || !data?.success || !data?.watchUrl) {
+      console.error('yflix search failed:', error || data?.error);
+      return [];
+    }
+
+    let url = data.watchUrl;
+    // Append season/episode hash for TV shows
+    if (type === "tv" && season && episode) {
+      url = `${url}#ep=${season},${episode}`;
+    }
+
+    return [
+      { name: "Server 1", quality: "HD", url },
+    ];
+  } catch (err) {
+    console.error('yflix search error:', err);
+    return [];
+  }
 };
