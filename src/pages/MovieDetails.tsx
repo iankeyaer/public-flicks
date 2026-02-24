@@ -30,6 +30,43 @@ const MovieDetails = () => {
     enabled: !!id,
   });
 
+  // Auto-fetch sources when movie details load
+  useEffect(() => {
+    if (!data) return;
+    const title = data.title || data.name || "";
+    const year = (data.release_date || data.first_air_date || "").slice(0, 4);
+    
+    const fetchSources = async () => {
+      setLoadingSources(true);
+      const result = await searchYflixSources(
+        title,
+        mediaType,
+        year,
+        mediaType === "tv" ? selectedSeason : undefined,
+        mediaType === "tv" ? selectedEpisode : undefined
+      );
+      if (result.fallback && result.watchUrl) {
+        window.open(result.watchUrl, '_blank');
+      } else if (result.sources.length > 0) {
+        setSources(result.sources);
+        setShowPlayer(true);
+      }
+      setLoadingSources(false);
+      if (user) {
+        addToHistory.mutate({
+          tmdb_id: data.id,
+          media_type: mediaType,
+          title,
+          poster_path: data.poster_path,
+          season: mediaType === "tv" ? selectedSeason : undefined,
+          episode: mediaType === "tv" ? selectedEpisode : undefined,
+        });
+      }
+    };
+
+    fetchSources();
+  }, [data, mediaType, selectedSeason, selectedEpisode]);
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -117,32 +154,9 @@ const MovieDetails = () => {
 
             <div className="flex flex-wrap gap-3 mb-6">
               <button
-                onClick={async () => {
-                  setLoadingSources(true);
-                  const result = await searchYflixSources(
-                    title,
-                    mediaType,
-                    year,
-                    mediaType === "tv" ? selectedSeason : undefined,
-                    mediaType === "tv" ? selectedEpisode : undefined
-                  );
-                  if (result.fallback && result.watchUrl) {
-                    // Open yflix in a new tab since iframe embedding is blocked
-                    window.open(result.watchUrl, '_blank');
-                  } else if (result.sources.length > 0) {
-                    setSources(result.sources);
-                    setShowPlayer(true);
-                  }
-                  setLoadingSources(false);
-                  if (user) {
-                    addToHistory.mutate({
-                      tmdb_id: data.id,
-                      media_type: mediaType,
-                      title,
-                      poster_path: data.poster_path,
-                      season: mediaType === "tv" ? selectedSeason : undefined,
-                      episode: mediaType === "tv" ? selectedEpisode : undefined,
-                    });
+                onClick={() => {
+                  if (showPlayer) {
+                    document.getElementById('video-player-section')?.scrollIntoView({ behavior: 'smooth' });
                   }
                 }}
                 disabled={loadingSources}
@@ -151,7 +165,7 @@ const MovieDetails = () => {
                 {loadingSources ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Loading...</>
                 ) : (
-                  <>▶ Watch Now</>
+                  <>▶ {showPlayer ? "Jump to Player" : "Watch Now"}</>
                 )}
               </button>
               <button
@@ -210,7 +224,7 @@ const MovieDetails = () => {
 
         {/* Player */}
         {showPlayer && (
-          <div className="mt-8 animate-fade-in">
+          <div id="video-player-section" className="mt-8 animate-fade-in">
             <h3 className="font-display text-xl tracking-wide text-foreground mb-3">
               Now Playing: {title}
               {mediaType === "tv" && ` – S${selectedSeason}E${selectedEpisode}`}
