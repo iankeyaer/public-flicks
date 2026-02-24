@@ -1,12 +1,13 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getDetails, getImageUrl, getStreamingSources } from "@/lib/tmdb";
+import { getDetails, getImageUrl, searchYflixSources } from "@/lib/tmdb";
 import { MovieDetails as MovieDetailsType } from "@/types/movie";
 import VideoPlayer from "@/components/VideoPlayer";
 import MovieSection from "@/components/MovieSection";
 import ReviewSection from "@/components/ReviewSection";
 import { Star, Clock, Calendar, Loader2, Flag, Heart } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchHistory } from "@/hooks/use-watch-history";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +18,8 @@ const MovieDetails = () => {
   const [showPlayer, setShowPlayer] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
+  const [sources, setSources] = useState<{ name: string; quality: string; url: string }[]>([]);
+  const [loadingSources, setLoadingSources] = useState(false);
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addToHistory } = useWatchHistory();
   const { user } = useAuth();
@@ -49,7 +52,6 @@ const MovieDetails = () => {
     (v) => v.type === "Trailer" && v.site === "YouTube"
   );
   
-  const sources = getStreamingSources(mediaType, data.id, selectedSeason, selectedEpisode);
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,8 +117,18 @@ const MovieDetails = () => {
 
             <div className="flex flex-wrap gap-3 mb-6">
               <button
-                onClick={() => {
+                onClick={async () => {
                   setShowPlayer(true);
+                  setLoadingSources(true);
+                  const found = await searchYflixSources(
+                    title,
+                    mediaType,
+                    year,
+                    mediaType === "tv" ? selectedSeason : undefined,
+                    mediaType === "tv" ? selectedEpisode : undefined
+                  );
+                  setSources(found);
+                  setLoadingSources(false);
                   if (user) {
                     addToHistory.mutate({
                       tmdb_id: data.id,
@@ -128,9 +140,14 @@ const MovieDetails = () => {
                     });
                   }
                 }}
-                className="flex items-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                disabled={loadingSources}
+                className="flex items-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
-                ▶ Watch Now
+                {loadingSources ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Loading...</>
+                ) : (
+                  <>▶ Watch Now</>
+                )}
               </button>
               <button
                 onClick={() => toggleFavorite({ id: data.id, title: data.title, name: data.name, poster_path: data.poster_path, backdrop_path: data.backdrop_path, overview: data.overview || "", vote_average: data.vote_average, release_date: data.release_date, first_air_date: data.first_air_date, media_type: mediaType, genre_ids: data.genres?.map(g => g.id) || [], popularity: 0 })}
