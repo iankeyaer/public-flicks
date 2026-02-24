@@ -55,7 +55,7 @@ const Navbar = () => {
         <Link to="/" className="flex items-center gap-2">
           
           <span className="text-2xl font-extrabold tracking-tight text-foreground lowercase" style={{ fontFamily: "'Nunito', sans-serif" }}>
-            ziv<span className="text-primary">ora</span>
+            quo<span className="text-primary">rix</span>
           </span>
         </Link>
 

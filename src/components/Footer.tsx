@@ -6,11 +6,11 @@ const Footer = () => (
       <div className="flex items-center gap-2 mb-4">
         
         <span className="text-lg font-extrabold tracking-tight text-foreground lowercase" style={{ fontFamily: "'Nunito', sans-serif" }}>
-          ziv<span className="text-primary">ora</span>
+          quo<span className="text-primary">rix</span>
         </span>
       </div>
       <p className="text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Zivora. This product uses the TMDB API but is not endorsed or certified by TMDB.
+        © {new Date().getFullYear()} Quorix. This product uses the TMDB API but is not endorsed or certified by TMDB.
       </p>
     </div>
   </footer>

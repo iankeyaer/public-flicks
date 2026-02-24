@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Bebas Neue"', 'Impact', 'sans-serif'],
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
         sans: ['Poppins', 'system-ui', 'sans-serif'],
       },
       colors: {
