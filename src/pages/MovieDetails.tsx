@@ -1,12 +1,13 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getDetails, getImageUrl, searchYflixSources } from "@/lib/tmdb";
+import { getDetails, getImageUrl } from "@/lib/tmdb";
+import { getStreamingSources } from "@/lib/streaming-sources";
 import { MovieDetails as MovieDetailsType } from "@/types/movie";
 import VideoPlayer from "@/components/VideoPlayer";
 import MovieSection from "@/components/MovieSection";
 import ReviewSection from "@/components/ReviewSection";
 import { Star, Clock, Calendar, Loader2, Flag, Heart } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchHistory } from "@/hooks/use-watch-history";
@@ -15,11 +16,8 @@ import { useAuth } from "@/contexts/AuthContext";
 const MovieDetails = () => {
   const { type, id } = useParams<{ type: string; id: string }>();
   const mediaType = (type === "tv" ? "tv" : "movie") as "movie" | "tv";
-  const [showPlayer, setShowPlayer] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
-  const [sources, setSources] = useState<{ name: string; quality: string; url: string }[]>([]);
-  const [loadingSources, setLoadingSources] = useState(false);
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addToHistory } = useWatchHistory();
   const { user } = useAuth();
@@ -30,42 +28,30 @@ const MovieDetails = () => {
     enabled: !!id,
   });
 
-  // Auto-fetch sources when movie details load
-  useEffect(() => {
-    if (!data) return;
-    const title = data.title || data.name || "";
-    const year = (data.release_date || data.first_air_date || "").slice(0, 4);
-    
-    const fetchSources = async () => {
-      setLoadingSources(true);
-      const result = await searchYflixSources(
-        title,
-        mediaType,
-        year,
-        mediaType === "tv" ? selectedSeason : undefined,
-        mediaType === "tv" ? selectedEpisode : undefined
-      );
-      if (result.fallback && result.watchUrl) {
-        window.open(result.watchUrl, '_blank');
-      } else if (result.sources.length > 0) {
-        setSources(result.sources);
-        setShowPlayer(true);
-      }
-      setLoadingSources(false);
-      if (user) {
-        addToHistory.mutate({
-          tmdb_id: data.id,
-          media_type: mediaType,
-          title,
-          poster_path: data.poster_path,
-          season: mediaType === "tv" ? selectedSeason : undefined,
-          episode: mediaType === "tv" ? selectedEpisode : undefined,
-        });
-      }
-    };
+  // Generate sources instantly from TMDB ID — no API call needed
+  const sources = useMemo(() => {
+    if (!id) return [];
+    return getStreamingSources(
+      mediaType,
+      Number(id),
+      mediaType === "tv" ? selectedSeason : undefined,
+      mediaType === "tv" ? selectedEpisode : undefined
+    );
+  }, [id, mediaType, selectedSeason, selectedEpisode]);
 
-    fetchSources();
-  }, [data, mediaType, selectedSeason, selectedEpisode]);
+  // Track watch history when sources are ready
+  useEffect(() => {
+    if (!data || !user || sources.length === 0) return;
+    const title = data.title || data.name || "";
+    addToHistory.mutate({
+      tmdb_id: data.id,
+      media_type: mediaType,
+      title,
+      poster_path: data.poster_path,
+      season: mediaType === "tv" ? selectedSeason : undefined,
+      episode: mediaType === "tv" ? selectedEpisode : undefined,
+    });
+  }, [data?.id, mediaType, selectedSeason, selectedEpisode]);
 
   if (isLoading) {
     return (
@@ -88,7 +74,6 @@ const MovieDetails = () => {
   const trailer = data.videos?.results.find(
     (v) => v.type === "Trailer" && v.site === "YouTube"
   );
-  
 
   return (
     <div className="min-h-screen bg-background">
@@ -155,18 +140,11 @@ const MovieDetails = () => {
             <div className="flex flex-wrap gap-3 mb-6">
               <button
                 onClick={() => {
-                  if (showPlayer) {
-                    document.getElementById('video-player-section')?.scrollIntoView({ behavior: 'smooth' });
-                  }
+                  document.getElementById('video-player-section')?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                disabled={loadingSources}
-                className="flex items-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
               >
-                {loadingSources ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Loading...</>
-                ) : (
-                  <>▶ {showPlayer ? "Jump to Player" : "Watch Now"}</>
-                )}
+                ▶ Watch Now
               </button>
               <button
                 onClick={() => toggleFavorite({ id: data.id, title: data.title, name: data.name, poster_path: data.poster_path, backdrop_path: data.backdrop_path, overview: data.overview || "", vote_average: data.vote_average, release_date: data.release_date, first_air_date: data.first_air_date, media_type: mediaType, genre_ids: data.genres?.map(g => g.id) || [], popularity: 0 })}
@@ -183,7 +161,6 @@ const MovieDetails = () => {
                 <Flag className="h-4 w-4" /> Report
               </button>
             </div>
-
           </div>
         </div>
 
@@ -222,16 +199,14 @@ const MovieDetails = () => {
           </div>
         )}
 
-        {/* Player */}
-        {showPlayer && (
-          <div id="video-player-section" className="mt-8 animate-fade-in">
-            <h3 className="font-display text-xl tracking-wide text-foreground mb-3">
-              Now Playing: {title}
-              {mediaType === "tv" && ` – S${selectedSeason}E${selectedEpisode}`}
-            </h3>
-            <VideoPlayer sources={sources} title={title} />
-          </div>
-        )}
+        {/* Player — always visible, auto-plays */}
+        <div id="video-player-section" className="mt-8 animate-fade-in">
+          <h3 className="font-display text-xl tracking-wide text-foreground mb-3">
+            Now Playing: {title}
+            {mediaType === "tv" && ` – S${selectedSeason}E${selectedEpisode}`}
+          </h3>
+          <VideoPlayer sources={sources} title={title} />
+        </div>
 
         {/* Trailer */}
         {trailer && (
