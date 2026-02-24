@@ -43,45 +43,7 @@ export const getStreamingSources = (
   tmdbId: number,
   season?: number,
   episode?: number
-) => {
-  const s = season || 1;
-  const e = episode || 1;
-
-  return [
-    {
-      name: "Server 1",
-      quality: "HD",
-      url: type === "movie"
-        ? `https://vidbinge.dev/embed/movie/${tmdbId}`
-        : `https://vidbinge.dev/embed/tv/${tmdbId}/${s}/${e}`,
-    },
-    {
-      name: "Server 2",
-      quality: "HD",
-      url: type === "movie"
-        ? `https://embed.su/embed/movie/${tmdbId}`
-        : `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`,
-    },
-    {
-      name: "Server 3",
-      quality: "1080p",
-      url: type === "movie"
-        ? `https://vidsrc.pro/embed/movie/${tmdbId}`
-        : `https://vidsrc.pro/embed/tv/${tmdbId}/${s}/${e}`,
-    },
-    {
-      name: "Server 4",
-      quality: "1080p",
-      url: type === "movie"
-        ? `https://vidsrc.cc/v2/embed/movie/${tmdbId}`
-        : `https://vidsrc.cc/v2/embed/tv/${tmdbId}/${s}/${e}`,
-    },
-    {
-      name: "Server 5",
-      quality: "1080p",
-      url: type === "movie"
-        ? `https://player.autoembed.cc/embed/movie/${tmdbId}`
-        : `https://player.autoembed.cc/embed/tv/${tmdbId}/${s}/${e}`,
-    },
-  ];
+): { name: string; quality: string; url: string }[] => {
+  // Sources will be configured here
+  return [];
 };
