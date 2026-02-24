@@ -50,34 +50,38 @@ export const getStreamingSources = (
   return [];
 };
 
+export interface YflixResult {
+  sources: { name: string; quality: string; url: string }[];
+  watchUrl?: string;
+  fallback: boolean;
+}
+
 export const searchYflixSources = async (
   title: string,
   type: "movie" | "tv",
   year?: string,
   season?: number,
   episode?: number
-): Promise<{ name: string; quality: string; url: string }[]> => {
+): Promise<YflixResult> => {
   try {
     const { data, error } = await supabase.functions.invoke('yflix-search', {
-      body: { title, type, year },
+      body: { title, type, year, season, episode },
     });
 
-    if (error || !data?.success || !data?.watchUrl) {
+    if (error || !data?.success) {
       console.error('yflix search failed:', error || data?.error);
-      return [];
+      return { sources: [], fallback: true };
     }
 
-    let url = data.watchUrl;
-    // Append season/episode hash for TV shows
-    if (type === "tv" && season && episode) {
-      url = `${url}#ep=${season},${episode}`;
+    // If the edge function found embed URLs, use those
+    if (data.sources && data.sources.length > 0) {
+      return { sources: data.sources, watchUrl: data.watchUrl, fallback: false };
     }
 
-    return [
-      { name: "Server 1", quality: "HD", url },
-    ];
+    // Fallback: open yflix in a new tab
+    return { sources: [], watchUrl: data.watchUrl, fallback: true };
   } catch (err) {
     console.error('yflix search error:', err);
-    return [];
+    return { sources: [], fallback: true };
   }
 };

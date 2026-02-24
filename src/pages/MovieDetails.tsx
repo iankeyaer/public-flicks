@@ -118,16 +118,21 @@ const MovieDetails = () => {
             <div className="flex flex-wrap gap-3 mb-6">
               <button
                 onClick={async () => {
-                  setShowPlayer(true);
                   setLoadingSources(true);
-                  const found = await searchYflixSources(
+                  const result = await searchYflixSources(
                     title,
                     mediaType,
                     year,
                     mediaType === "tv" ? selectedSeason : undefined,
                     mediaType === "tv" ? selectedEpisode : undefined
                   );
-                  setSources(found);
+                  if (result.fallback && result.watchUrl) {
+                    // Open yflix in a new tab since iframe embedding is blocked
+                    window.open(result.watchUrl, '_blank');
+                  } else if (result.sources.length > 0) {
+                    setSources(result.sources);
+                    setShowPlayer(true);
+                  }
                   setLoadingSources(false);
                   if (user) {
                     addToHistory.mutate({
