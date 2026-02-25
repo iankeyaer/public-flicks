@@ -5,7 +5,7 @@ const corsHeaders = {
 
 /**
  * Build embeddable player URLs from multiple aggregator services.
- * These services accept TMDB IDs and return an iframe-ready player.
+ * All accept TMDB IDs and return iframe-ready players.
  */
 function buildEmbedSources(
   tmdbId: number,
@@ -13,67 +13,132 @@ function buildEmbedSources(
   season?: number,
   episode?: number,
 ): { name: string; quality: string; url: string }[] {
+  const s = season || 1;
+  const e = episode || 1;
   const sources: { name: string; quality: string; url: string }[] = [];
 
-  // VidSrc.to - popular embed aggregator
-  if (mediaType === 'movie') {
+  const add = (name: string, quality: string, movieUrl: string, tvUrl: string) => {
     sources.push({
-      name: 'Server 1',
-      quality: 'HD',
-      url: `https://vidsrc.to/embed/movie/${tmdbId}`,
+      name,
+      quality,
+      url: mediaType === 'movie' ? movieUrl : tvUrl,
     });
-  } else {
-    sources.push({
-      name: 'Server 1',
-      quality: 'HD',
-      url: `https://vidsrc.to/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-    });
-  }
+  };
 
-  // VidSrc.icu - alternative
-  if (mediaType === 'movie') {
-    sources.push({
-      name: 'Server 2',
-      quality: 'HD',
-      url: `https://vidsrc.icu/embed/movie/${tmdbId}`,
-    });
-  } else {
-    sources.push({
-      name: 'Server 2',
-      quality: 'HD',
-      url: `https://vidsrc.icu/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-    });
-  }
+  // 1. VidSrc.to
+  add('VidSrc.to', 'HD',
+    `https://vidsrc.to/embed/movie/${tmdbId}`,
+    `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`);
 
-  // embed.su
-  if (mediaType === 'movie') {
-    sources.push({
-      name: 'Server 3',
-      quality: '1080p',
-      url: `https://embed.su/embed/movie/${tmdbId}`,
-    });
-  } else {
-    sources.push({
-      name: 'Server 3',
-      quality: '1080p',
-      url: `https://embed.su/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-    });
-  }
+  // 2. Vidnest (vidsrc.cc)
+  add('Vidnest', 'HD',
+    `https://vidsrc.cc/v2/embed/movie/${tmdbId}`,
+    `https://vidsrc.cc/v2/embed/tv/${tmdbId}/${s}/${e}`);
 
-  // multiembed.mov
-  if (mediaType === 'movie') {
-    sources.push({
-      name: 'Server 4',
-      quality: 'HD',
-      url: `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`,
-    });
-  } else {
-    sources.push({
-      name: 'Server 4',
-      quality: 'HD',
-      url: `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season || 1}&e=${episode || 1}`,
-    });
-  }
+  // 3. Vidzee (vidsrc.store / vsembed.ru)
+  add('Vidzee', '1080p',
+    `https://vidsrc.xyz/embed/movie/${tmdbId}`,
+    `https://vidsrc.xyz/embed/tv/${tmdbId}/${s}/${e}`);
+
+  // 4. VidRock (vidsrc.icu)
+  add('VidRock', 'HD',
+    `https://vidsrc.icu/embed/movie/${tmdbId}`,
+    `https://vidsrc.icu/embed/tv/${tmdbId}/${s}/${e}`);
+
+  // 5. VidSrc.wtf (API 1)
+  add('VidSrc.wtf', 'HD',
+    `https://vidsrc.wtf/api/1/movie/?id=${tmdbId}`,
+    `https://vidsrc.wtf/api/1/tv/?id=${tmdbId}&s=${s}&e=${e}`);
+
+  // 6. RiveEmbed
+  add('RiveEmbed', '1080p',
+    `https://rivestream.org/embed?type=movie&id=${tmdbId}`,
+    `https://rivestream.org/embed?type=tv&id=${tmdbId}&s=${s}&e=${e}`);
+
+  // 7. SmashyStream
+  add('SmashyStream', 'HD',
+    `https://player.smashy.stream/${tmdbId}`,
+    `https://player.smashy.stream/${tmdbId}?s=${s}&e=${e}`);
+
+  // 8. 111Movies
+  add('111Movies', 'HD',
+    `https://111movies.com/movie/${tmdbId}`,
+    `https://111movies.com/tv/${tmdbId}/${s}/${e}`);
+
+  // 9. Videasy
+  add('Videasy', '1080p',
+    `https://player.videasy.net/movie/${tmdbId}`,
+    `https://player.videasy.net/tv/${tmdbId}/${s}/${e}`);
+
+  // 10. VidLink
+  add('VidLink', 'HD',
+    `https://vidlink.pro/movie/${tmdbId}`,
+    `https://vidlink.pro/tv/${tmdbId}/${s}/${e}`);
+
+  // 11. VidFast
+  add('VidFast', 'HD',
+    `https://vidfast.pro/movie/${tmdbId}`,
+    `https://vidfast.pro/tv/${tmdbId}/${s}/${e}`);
+
+  // 12. Embed.su
+  add('Embed.su', '1080p',
+    `https://embed.su/embed/movie/${tmdbId}`,
+    `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`);
+
+  // 13. 2Embed
+  add('2Embed', 'HD',
+    `https://www.2embed.cc/embed/movie?tmdb=${tmdbId}`,
+    `https://www.2embed.cc/embed/tv?tmdb=${tmdbId}&s=${s}&e=${e}`);
+
+  // 14. MoviesAPI
+  add('MoviesAPI', 'HD',
+    `https://moviesapi.club/movie/${tmdbId}`,
+    `https://moviesapi.club/tv/${tmdbId}/${s}/${e}`);
+
+  // 15. AutoEmbed
+  add('AutoEmbed', 'HD',
+    `https://autoembed.co/movie/tmdb/${tmdbId}`,
+    `https://autoembed.co/tv/tmdb/${tmdbId}/${s}/${e}`);
+
+  // 16. MultiEmbed
+  add('MultiEmbed', 'HD',
+    `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`,
+    `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${s}&e=${e}`);
+
+  // 17. VidSrc.xyz
+  add('VidSrc.xyz', 'HD',
+    `https://vidsrc.xyz/embed/movie/${tmdbId}`,
+    `https://vidsrc.xyz/embed/tv/${tmdbId}/${s}/${e}`);
+
+  // 18. PrimeWire
+  add('PrimeWire', 'HD',
+    `https://www.primewire.tf/embed/movie?tmdb=${tmdbId}`,
+    `https://www.primewire.tf/embed/tv?tmdb=${tmdbId}&s=${s}&e=${e}`);
+
+  // 19. WarezCDN
+  add('WarezCDN', 'HD',
+    `https://embed.warezcdn.com/filme/${tmdbId}`,
+    `https://embed.warezcdn.com/serie/${tmdbId}/${s}/${e}`);
+
+  // 20. SuperFlix
+  add('SuperFlix', 'HD',
+    `https://superflix.stream/movie/${tmdbId}`,
+    `https://superflix.stream/tv/${tmdbId}/${s}/${e}`);
+
+  // 21. VidUp
+  add('VidUp', 'HD',
+    `https://vidup.io/embed/movie/${tmdbId}`,
+    `https://vidup.io/embed/tv/${tmdbId}/${s}/${e}`);
+
+  // 22. VidSrc.wtf (API 2)
+  add('VidSrc.wtf #2', 'HD',
+    `https://vidsrc.wtf/api/2/movie/?id=${tmdbId}`,
+    `https://vidsrc.wtf/api/2/tv/?id=${tmdbId}&s=${s}&e=${e}`);
+
+  // 23. VidSrc.wtf (API 3)
+  add('VidSrc.wtf #3', 'HD',
+    `https://vidsrc.wtf/api/3/movie/?id=${tmdbId}`,
+    `https://vidsrc.wtf/api/3/tv/?id=${tmdbId}&s=${s}&e=${e}`);
 
   return sources;
 }
@@ -84,16 +149,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { title, type, year, season, episode, tmdbId } = await req.json();
-
-    if (!title && !tmdbId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Title or TMDB ID is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-    }
-
-    const mediaType = type === 'tv' ? 'tv' : 'movie';
+    const { title, type, season, episode, tmdbId } = await req.json();
 
     if (!tmdbId) {
       return new Response(
@@ -102,14 +158,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    const sources = buildEmbedSources(
-      tmdbId,
-      mediaType as 'movie' | 'tv',
-      season,
-      episode,
-    );
+    const mediaType = type === 'tv' ? 'tv' : 'movie';
+    const sources = buildEmbedSources(tmdbId, mediaType, season, episode);
 
-    console.log(`Returning ${sources.length} embed source(s) for ${mediaType} ${tmdbId}`);
+    console.log(`Returning ${sources.length} embed sources for ${mediaType} ${tmdbId}`);
 
     return new Response(
       JSON.stringify({ success: true, sources }),
