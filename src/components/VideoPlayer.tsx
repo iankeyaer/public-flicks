@@ -31,6 +31,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
   const [showControls, setShowControls] = useState(true);
   const [showAdTip, setShowAdTip] = useState(() => !localStorage.getItem("hideAdTip"));
   const [autoAdvancing, setAutoAdvancing] = useState(false);
+  const [isEmbeddedFrame, setIsEmbeddedFrame] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -94,6 +95,15 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Detect preview/embed context (sandboxed previews can block some providers)
+  useEffect(() => {
+    try {
+      setIsEmbeddedFrame(window.self !== window.top);
+    } catch {
+      setIsEmbeddedFrame(true);
+    }
+  }, []);
+
   // Close menus on outside click
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -153,6 +163,12 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
     localStorage.setItem("hideAdTip", "1");
   };
 
+  const openCurrentSourceInNewTab = () => {
+    const url = sources[activeServer]?.url;
+    if (!url) return;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   if (!sources.length) {
     return (
       <div className="aspect-video bg-secondary rounded-xl flex items-center justify-center">
@@ -192,6 +208,20 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {isEmbeddedFrame && (
+        <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-foreground/85">
+            You are in preview mode. If you see “iframe sandbox detected”, use the button below — no settings change needed.
+          </p>
+          <button
+            onClick={openCurrentSourceInNewTab}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Open and play in new tab
+          </button>
+        </div>
+      )}
 
       {/* Player container */}
       <div
@@ -274,12 +304,12 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
 
           {/* Fallback link */}
           {!showLoading && iframeLoaded && (
-            <div className="absolute bottom-14 left-0 right-0 flex justify-center z-20 pointer-events-none">
+            <div className="absolute bottom-14 left-0 right-0 flex justify-center z-20 px-3">
               <button
-                onClick={() => window.open(currentSource.url, '_blank')}
-                className="pointer-events-auto text-[10px] text-white/50 hover:text-white/80 underline transition-colors"
+                onClick={openCurrentSourceInNewTab}
+                className="text-xs rounded-md border border-white/20 bg-black/70 px-3 py-1.5 text-white/85 hover:text-white hover:bg-black/80 transition-colors"
               >
-                Video not loading? Open in new tab
+                Not playing? Open this server in a new tab
               </button>
             </div>
           )}
