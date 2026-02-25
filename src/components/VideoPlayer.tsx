@@ -260,7 +260,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
             onLoad={() => setIframeLoaded(true)}
             onError={handleError}
             referrerPolicy="no-referrer"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-popups-to-escape-sandbox"
             style={{ border: 0 }}
           />
 

@@ -48,7 +48,8 @@ const MovieDetails = () => {
         mediaType,
         year || undefined,
         mediaType === "tv" ? selectedSeason : undefined,
-        mediaType === "tv" ? selectedEpisode : undefined
+        mediaType === "tv" ? selectedEpisode : undefined,
+        data.id
       );
 
       if (result.sources.length > 0) {
@@ -252,7 +253,7 @@ const MovieDetails = () => {
                       const y = (data.release_date || data.first_air_date || "").slice(0, 4);
                       setLoadingSources(true);
                       setSourceError(null);
-                      fetchStreamingSources(t, mediaType, y || undefined, mediaType === "tv" ? selectedSeason : undefined, mediaType === "tv" ? selectedEpisode : undefined).then(result => {
+                      fetchStreamingSources(t, mediaType, y || undefined, mediaType === "tv" ? selectedSeason : undefined, mediaType === "tv" ? selectedEpisode : undefined, data.id).then(result => {
                         if (result.sources.length > 0) setSources(result.sources);
                         else setSourceError(result.error || "No sources found");
                         setLoadingSources(false);
