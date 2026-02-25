@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import Hls from "hls.js";
 import {
   AlertCircle,
   ShieldCheck,
@@ -10,7 +9,6 @@ import {
   ChevronDown,
   Check,
   RefreshCw,
-  Zap,
 } from "lucide-react";
 import { StreamSource } from "@/types/movie";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,11 +19,7 @@ interface VideoPlayerProps {
 }
 
 const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
-  const [activeServer, setActiveServer] = useState(() => {
-    // Auto-select first direct source if available
-    const firstDirect = sources.findIndex(s => s.type === 'direct');
-    return firstDirect >= 0 ? firstDirect : 0;
-  });
+  const [activeServer, setActiveServer] = useState(0);
   const [error, setError] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
   const [minLoadMet, setMinLoadMet] = useState(false);
@@ -36,108 +30,50 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
   const [reported, setReported] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [showAdTip, setShowAdTip] = useState(() => !localStorage.getItem("hideAdTip"));
-  const [hlsReady, setHlsReady] = useState(false);
+  const [autoAdvancing, setAutoAdvancing] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const hlsRef = useRef<Hls | null>(null);
   const controlsTimer = useRef<ReturnType<typeof setTimeout>>();
+  const loadTimer = useRef<ReturnType<typeof setTimeout>>();
   const sourceMenuRef = useRef<HTMLDivElement>(null);
   const reportMenuRef = useRef<HTMLDivElement>(null);
 
-  const currentSource = sources[activeServer];
-  const isDirect = currentSource?.type === 'direct';
-  const directCount = sources.filter(s => s.type === 'direct').length;
+  const showLoading = !iframeLoaded || !minLoadMet;
 
-  const showLoading = isDirect ? !hlsReady : (!iframeLoaded || !minLoadMet);
-
-  // HLS setup for direct sources
+  // Loading logic with auto-failover after 15s
   useEffect(() => {
-    if (!isDirect || !videoRef.current) return;
-
-    setHlsReady(false);
-    setError(false);
-
-    const video = videoRef.current;
-    const url = currentSource.url;
-
-    // Cleanup previous HLS instance
-    if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
-    }
-
-    if (url.includes('.m3u8') && Hls.isSupported()) {
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: false,
-        maxBufferLength: 30,
-        maxMaxBufferLength: 60,
-      });
-      hlsRef.current = hls;
-
-      hls.loadSource(url);
-      hls.attachMedia(video);
-
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        setHlsReady(true);
-        video.play().catch(() => {});
-      });
-
-      hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (data.fatal) {
-          console.error('HLS fatal error:', data.type, data.details);
-          setError(true);
-          setHlsReady(true);
-          // Auto-advance to next source
-          if (activeServer < sources.length - 1) {
-            setTimeout(() => setActiveServer(prev => prev + 1), 2000);
-          }
-        }
-      });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari native HLS
-      video.src = url;
-      video.addEventListener('loadedmetadata', () => {
-        setHlsReady(true);
-        video.play().catch(() => {});
-      }, { once: true });
-      video.addEventListener('error', () => {
-        setError(true);
-        setHlsReady(true);
-      }, { once: true });
-    } else {
-      // Direct mp4
-      video.src = url;
-      video.addEventListener('loadeddata', () => {
-        setHlsReady(true);
-        video.play().catch(() => {});
-      }, { once: true });
-      video.addEventListener('error', () => {
-        setError(true);
-        setHlsReady(true);
-      }, { once: true });
-    }
-
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-    };
-  }, [activeServer, isDirect, currentSource?.url]);
-
-  // Iframe loading logic
-  useEffect(() => {
-    if (isDirect) return;
     setIframeLoaded(false);
     setMinLoadMet(false);
     setError(false);
     setReported(false);
+    setAutoAdvancing(false);
     setIframeKey((k) => k + 1);
+
     const minTimer = setTimeout(() => setMinLoadMet(true), 2000);
-    return () => clearTimeout(minTimer);
-  }, [activeServer, isDirect]);
+
+    // Auto-advance if iframe doesn't load content within 15 seconds
+    loadTimer.current = setTimeout(() => {
+      if (activeServer < sources.length - 1) {
+        setAutoAdvancing(true);
+        setTimeout(() => {
+          setActiveServer((prev) => prev + 1);
+        }, 1000);
+      }
+    }, 15000);
+
+    return () => {
+      clearTimeout(minTimer);
+      clearTimeout(loadTimer.current);
+    };
+  }, [activeServer, sources.length]);
+
+  // Cancel auto-advance timer when iframe loads
+  useEffect(() => {
+    if (iframeLoaded) {
+      clearTimeout(loadTimer.current);
+      setAutoAdvancing(false);
+    }
+  }, [iframeLoaded]);
 
   // Fullscreen change listener
   useEffect(() => {
@@ -191,7 +127,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
     }
   };
 
-  const handleIframeError = () => {
+  const handleError = () => {
     setIframeLoaded(true);
     setError(true);
     if (activeServer < sources.length - 1) {
@@ -228,26 +164,13 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
     );
   }
 
+  const currentSource = sources[activeServer];
+
   return (
     <div className="space-y-3">
-      {/* Direct source badge */}
-      {directCount > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 rounded-xl bg-green-500/10 border border-green-500/20 px-4 py-2.5"
-        >
-          <Zap className="h-4 w-4 text-green-500 flex-shrink-0" />
-          <p className="text-xs text-foreground/80">
-            <span className="font-semibold text-green-500">{directCount} direct stream{directCount > 1 ? 's' : ''}</span>{' '}
-            found — auto-playing best quality. No ads, no popups.
-          </p>
-        </motion.div>
-      )}
-
-      {/* Ad tip for embeds */}
+      {/* Ad tip */}
       <AnimatePresence>
-        {showAdTip && !isDirect && (
+        {showAdTip && (
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -280,7 +203,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
         <div className="relative aspect-video bg-black">
           {/* Loading overlay */}
           <AnimatePresence>
-            {showLoading && (
+            {(showLoading || autoAdvancing) && (
               <motion.div
                 initial={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -291,10 +214,13 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
                   <div className="h-12 w-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin mx-auto" />
                   <div className="space-y-1.5">
                     <p className="text-sm font-medium text-foreground">
-                      {isDirect ? 'Connecting to stream...' : 'Loading'}
+                      {autoAdvancing ? 'Trying next server...' : 'Loading'}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {isDirect ? `${currentSource.name} • ${currentSource.quality}` : 'Please be patient, this may take a moment...'}
+                      {autoAdvancing
+                        ? `${currentSource.name} timed out — switching automatically`
+                        : `${currentSource.name} • Please be patient...`
+                      }
                     </p>
                   </div>
                 </div>
@@ -333,43 +259,30 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
             )}
           </AnimatePresence>
 
-          {/* Direct video player */}
-          {isDirect && (
-            <video
-              ref={videoRef}
-              className={`w-full h-full bg-black transition-opacity duration-500 ${showLoading ? "opacity-0" : "opacity-100"}`}
-              controls
-              playsInline
-              autoPlay
-            />
-          )}
+          {/* Iframe */}
+          <iframe
+            key={iframeKey}
+            src={currentSource.url}
+            title={title}
+            className={`w-full h-full border-0 bg-black transition-opacity duration-500 ${showLoading ? "opacity-0" : "opacity-100"}`}
+            allowFullScreen
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            onLoad={() => setIframeLoaded(true)}
+            onError={handleError}
+            referrerPolicy="no-referrer"
+            style={{ border: 0 }}
+          />
 
-          {/* Iframe for embed sources */}
-          {!isDirect && (
-            <>
-              <iframe
-                key={iframeKey}
-                src={currentSource.url}
-                title={title}
-                className={`w-full h-full border-0 bg-black transition-opacity duration-500 ${showLoading ? "opacity-0" : "opacity-100"}`}
-                allowFullScreen
-                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                onLoad={() => setIframeLoaded(true)}
-                onError={handleIframeError}
-                referrerPolicy="no-referrer"
-                style={{ border: 0 }}
-              />
-              {!showLoading && iframeLoaded && (
-                <div className="absolute bottom-14 left-0 right-0 flex justify-center z-20 pointer-events-none">
-                  <button
-                    onClick={() => window.open(currentSource.url, '_blank')}
-                    className="pointer-events-auto text-[10px] text-white/50 hover:text-white/80 underline transition-colors"
-                  >
-                    Video not loading? Open in new tab
-                  </button>
-                </div>
-              )}
-            </>
+          {/* Fallback link */}
+          {!showLoading && iframeLoaded && (
+            <div className="absolute bottom-14 left-0 right-0 flex justify-center z-20 pointer-events-none">
+              <button
+                onClick={() => window.open(currentSource.url, '_blank')}
+                className="pointer-events-auto text-[10px] text-white/50 hover:text-white/80 underline transition-colors"
+              >
+                Video not loading? Open in new tab
+              </button>
+            </div>
           )}
         </div>
 
@@ -387,11 +300,6 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
                 <div className="flex items-center gap-2 min-w-0">
                   <MonitorPlay className="h-4 w-4 text-primary flex-shrink-0" />
                   <span className="text-xs font-medium text-white truncate">{title}</span>
-                  {isDirect && (
-                    <span className="flex items-center gap-1 text-[10px] font-semibold text-green-400 bg-green-500/20 px-1.5 py-0.5 rounded">
-                      <Zap className="h-3 w-3" /> DIRECT
-                    </span>
-                  )}
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -412,43 +320,12 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 4, scale: 0.95 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute bottom-full mb-2 right-0 w-56 bg-card border border-border rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto"
+                          className="absolute bottom-full mb-2 right-0 w-48 bg-card border border-border rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto"
                         >
-                          {/* Direct sources section */}
-                          {directCount > 0 && (
-                            <>
-                              <div className="px-3 py-2 border-b border-border bg-green-500/5">
-                                <p className="text-[10px] font-semibold uppercase tracking-wider text-green-500 flex items-center gap-1">
-                                  <Zap className="h-3 w-3" /> Direct Streams
-                                </p>
-                              </div>
-                              {sources.map((source, idx) => source.type === 'direct' && (
-                                <button
-                                  key={idx}
-                                  onClick={() => handleSourceChange(idx)}
-                                  className={`w-full flex items-center justify-between px-3 py-2.5 text-xs transition-colors ${
-                                    idx === activeServer ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    {idx === activeServer && <Check className="h-3.5 w-3.5 text-primary" />}
-                                    <span className={idx === activeServer ? "font-semibold" : ""}>{source.name}</span>
-                                  </div>
-                                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-green-500/20 text-green-500">
-                                    {source.quality}
-                                  </span>
-                                </button>
-                              ))}
-                            </>
-                          )}
-
-                          {/* Embed sources section */}
                           <div className="px-3 py-2 border-b border-border">
-                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                              {directCount > 0 ? 'Embed Fallbacks' : 'Select Source'}
-                            </p>
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Select Source</p>
                           </div>
-                          {sources.map((source, idx) => source.type !== 'direct' && (
+                          {sources.map((source, idx) => (
                             <button
                               key={idx}
                               onClick={() => handleSourceChange(idx)}
@@ -472,7 +349,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
                     </AnimatePresence>
                   </div>
 
-                  {/* Report issue */}
+                  {/* Report */}
                   <div className="relative" ref={reportMenuRef}>
                     <button
                       onClick={() => { setShowReportMenu(!showReportMenu); setShowSourceMenu(false); }}
