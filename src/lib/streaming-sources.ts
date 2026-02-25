@@ -1,35 +1,44 @@
-import { supabase } from "@/integrations/supabase/client";
 import { StreamSource } from "@/types/movie";
 
-export interface StreamingResult {
-  sources: StreamSource[];
-  error?: string;
-}
-
 /**
- * Search yflix.to and sflix.ps for streaming links via the edge function.
- * Returns watch-page URLs that open in a new tab for seamless playback.
+ * Generate embed-friendly streaming sources using TMDB IDs.
+ * These providers allow direct iframe playback — no external redirects.
  */
-export const fetchStreamingSources = async (
-  title: string,
+export const getEmbedSources = (
   type: "movie" | "tv",
-  year?: string,
+  tmdbId: number,
   season?: number,
   episode?: number
-): Promise<StreamingResult> => {
-  try {
-    const { data, error } = await supabase.functions.invoke("yflix-search", {
-      body: { title, type, year, season, episode },
-    });
+): StreamSource[] => {
+  const sources: StreamSource[] = [];
 
-    if (error || !data?.success) {
-      console.error("Streaming search failed:", error || data?.error);
-      return { sources: [], error: data?.error || "Search failed" };
-    }
-
-    return { sources: data.sources || [] };
-  } catch (err) {
-    console.error("Streaming search error:", err);
-    return { sources: [], error: "Network error" };
+  // Provider 1
+  if (type === "movie") {
+    sources.push({ name: "Server 1", quality: "HD", url: `https://vidsrc.icu/embed/movie/${tmdbId}` });
+  } else {
+    sources.push({ name: "Server 1", quality: "HD", url: `https://vidsrc.icu/embed/tv/${tmdbId}/${season || 1}/${episode || 1}` });
   }
+
+  // Provider 2
+  if (type === "movie") {
+    sources.push({ name: "Server 2", quality: "HD", url: `https://vidsrc.cc/v2/embed/movie/${tmdbId}` });
+  } else {
+    sources.push({ name: "Server 2", quality: "HD", url: `https://vidsrc.cc/v2/embed/tv/${tmdbId}/${season || 1}/${episode || 1}` });
+  }
+
+  // Provider 3
+  if (type === "movie") {
+    sources.push({ name: "Server 3", quality: "1080p", url: `https://moviesapi.club/movie/${tmdbId}` });
+  } else {
+    sources.push({ name: "Server 3", quality: "1080p", url: `https://moviesapi.club/tv/${tmdbId}-${season || 1}-${episode || 1}` });
+  }
+
+  // Provider 4
+  if (type === "movie") {
+    sources.push({ name: "Server 4", quality: "HD", url: `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1` });
+  } else {
+    sources.push({ name: "Server 4", quality: "HD", url: `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season || 1}&e=${episode || 1}` });
+  }
+
+  return sources;
 };

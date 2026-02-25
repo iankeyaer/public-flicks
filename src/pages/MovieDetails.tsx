@@ -1,13 +1,13 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getDetails, getImageUrl } from "@/lib/tmdb";
-import { fetchStreamingSources, StreamingResult } from "@/lib/streaming-sources";
+import { getEmbedSources } from "@/lib/streaming-sources";
 import { MovieDetails as MovieDetailsType, StreamSource } from "@/types/movie";
 import VideoPlayer from "@/components/VideoPlayer";
 import MovieSection from "@/components/MovieSection";
 import ReviewSection from "@/components/ReviewSection";
-import { Star, Clock, Calendar, Loader2, Flag, Heart, ExternalLink } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Star, Clock, Calendar, Loader2, Flag, Heart } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchHistory } from "@/hooks/use-watch-history";
@@ -22,45 +22,17 @@ const MovieDetails = () => {
   const { addToHistory } = useWatchHistory();
   const { user } = useAuth();
 
-  const [sources, setSources] = useState<StreamSource[]>([]);
-  const [loadingSources, setLoadingSources] = useState(false);
-  const [sourceError, setSourceError] = useState<string | null>(null);
-
   const { data, isLoading, error } = useQuery<MovieDetailsType>({
     queryKey: ["details", mediaType, id],
     queryFn: () => getDetails(mediaType, Number(id)),
     enabled: !!id,
   });
 
-  // Auto-fetch sources from yflix.to and sflix.ps when details load
-  useEffect(() => {
-    if (!data) return;
-    const title = data.title || data.name || "";
-    const year = (data.release_date || data.first_air_date || "").slice(0, 4);
-
-    const fetchSources = async () => {
-      setLoadingSources(true);
-      setSourceError(null);
-      setSources([]);
-
-      const result = await fetchStreamingSources(
-        title,
-        mediaType,
-        year || undefined,
-        mediaType === "tv" ? selectedSeason : undefined,
-        mediaType === "tv" ? selectedEpisode : undefined
-      );
-
-      if (result.sources.length > 0) {
-        setSources(result.sources);
-      } else {
-        setSourceError(result.error || "No sources found");
-      }
-      setLoadingSources(false);
-    };
-
-    fetchSources();
-  }, [data?.id, mediaType, selectedSeason, selectedEpisode]);
+  // Generate embed sources instantly from TMDB ID
+  const sources = useMemo(() => {
+    if (!id) return [];
+    return getEmbedSources(mediaType, Number(id), selectedSeason, selectedEpisode);
+  }, [id, mediaType, selectedSeason, selectedEpisode]);
 
   // Track watch history
   useEffect(() => {
@@ -98,9 +70,6 @@ const MovieDetails = () => {
     (v) => v.type === "Trailer" && v.site === "YouTube"
   );
 
-  const handlePlaySource = (source: StreamSource) => {
-    window.open(source.url, "_blank", "noopener,noreferrer");
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -228,81 +197,10 @@ const MovieDetails = () => {
 
         {/* Player Section */}
         <div id="video-player-section" className="mt-8 animate-fade-in">
-          <h3 className="font-display text-xl tracking-wide text-foreground mb-3">
-            Now Playing: {title}
-            {mediaType === "tv" && ` – S${selectedSeason}E${selectedEpisode}`}
-          </h3>
-
-          {loadingSources ? (
-            <div className="aspect-video bg-secondary rounded-xl flex items-center justify-center">
-              <div className="text-center space-y-4">
-                <Loader2 className="h-10 w-10 text-primary animate-spin mx-auto" />
-                <div className="space-y-1.5">
-                  <p className="text-sm font-medium text-foreground">Finding streams...</p>
-                  <p className="text-xs text-muted-foreground">Searching YFlix & SFlix for "{title}"</p>
-                </div>
-              </div>
-            </div>
-          ) : sources.length > 0 ? (
-            <div className="space-y-4">
-              {/* Source buttons — each opens the site in a new tab */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {sources.map((source, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handlePlaySource(source)}
-                    className="flex items-center justify-between gap-3 rounded-xl bg-secondary border border-border px-5 py-4 hover:bg-accent hover:border-primary/40 transition-all group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                        <span className="text-primary font-bold text-lg">▶</span>
-                      </div>
-                      <div className="text-left">
-                        <p className="text-sm font-semibold text-foreground">{source.name}</p>
-                        <p className="text-xs text-muted-foreground">Tap to play in {source.name}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/20 text-primary">
-                        {source.quality}
-                      </span>
-                      <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground text-center">
-                Click a source above to start watching. For the best experience, use an adblocker.
-              </p>
-            </div>
-          ) : (
-            <div className="aspect-video bg-secondary rounded-xl flex items-center justify-center">
-              <div className="text-center space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  {sourceError || "No streaming sources found for this title."}
-                </p>
-                <button
-                  onClick={() => {
-                    // Re-trigger the fetch
-                    if (data) {
-                      const t = data.title || data.name || "";
-                      const y = (data.release_date || data.first_air_date || "").slice(0, 4);
-                      setLoadingSources(true);
-                      setSourceError(null);
-                      fetchStreamingSources(t, mediaType, y || undefined, mediaType === "tv" ? selectedSeason : undefined, mediaType === "tv" ? selectedEpisode : undefined).then(result => {
-                        if (result.sources.length > 0) setSources(result.sources);
-                        else setSourceError(result.error || "No sources found");
-                        setLoadingSources(false);
-                      });
-                    }
-                  }}
-                  className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-                >
-                  Try again
-                </button>
-              </div>
-            </div>
-          )}
+          <VideoPlayer
+            sources={sources}
+            title={`${title}${mediaType === "tv" ? ` – S${selectedSeason}E${selectedEpisode}` : ""}`}
+          />
         </div>
 
         {/* Trailer */}
