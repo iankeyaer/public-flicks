@@ -50,4 +50,5 @@ export interface StreamSource {
   name: string;
   quality: string;
   url: string;
+  type: 'direct' | 'embed'; // direct = m3u8/mp4, embed = iframe
 }
