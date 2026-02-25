@@ -38,7 +38,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
 
   const showLoading = !iframeLoaded || !minLoadMet;
 
-  // Loading & auto-advance logic
+  // Loading logic (no auto-advance — let user pick servers)
   useEffect(() => {
     setIframeLoaded(false);
     setMinLoadMet(false);
@@ -46,18 +46,12 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
     setReported(false);
     setIframeKey((k) => k + 1);
 
-    const minTimer = setTimeout(() => setMinLoadMet(true), 3000);
-    const loadTimer = setTimeout(() => {
-      if (activeServer < sources.length - 1) {
-        setActiveServer((prev) => prev + 1);
-      }
-    }, 12000);
+    const minTimer = setTimeout(() => setMinLoadMet(true), 2000);
 
     return () => {
       clearTimeout(minTimer);
-      clearTimeout(loadTimer);
     };
-  }, [activeServer, sources.length]);
+  }, [activeServer]);
 
   // Fullscreen change listener
   useEffect(() => {
@@ -260,7 +254,6 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
             onLoad={() => setIframeLoaded(true)}
             onError={handleError}
             referrerPolicy="no-referrer"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-popups-to-escape-sandbox"
             style={{ border: 0 }}
           />
 
