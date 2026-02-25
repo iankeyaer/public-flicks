@@ -269,7 +269,6 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             onLoad={() => setIframeLoaded(true)}
             onError={handleError}
-            referrerPolicy="no-referrer"
             style={{ border: 0 }}
           />
 
