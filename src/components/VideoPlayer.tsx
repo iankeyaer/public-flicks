@@ -260,8 +260,21 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
             onLoad={() => setIframeLoaded(true)}
             onError={handleError}
             referrerPolicy="no-referrer"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
             style={{ border: 0 }}
           />
+
+          {/* Fallback: open in new tab if iframe seems blocked */}
+          {!showLoading && iframeLoaded && (
+            <div className="absolute bottom-14 left-0 right-0 flex justify-center z-20 pointer-events-none">
+              <button
+                onClick={() => window.open(currentSource.url, '_blank')}
+                className="pointer-events-auto text-[10px] text-white/50 hover:text-white/80 underline transition-colors"
+              >
+                Video not loading? Open in new tab
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Bottom control bar */}
