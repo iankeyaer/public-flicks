@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Check,
   RefreshCw,
+  SkipForward,
 } from "lucide-react";
 import { StreamSource } from "@/types/movie";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,7 +32,7 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
   const [showControls, setShowControls] = useState(true);
   const [showAdTip, setShowAdTip] = useState(() => !localStorage.getItem("hideAdTip"));
   const [autoAdvancing, setAutoAdvancing] = useState(false);
-  const [isEmbeddedFrame, setIsEmbeddedFrame] = useState(false);
+  
 
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -95,14 +96,6 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Detect preview/embed context (sandboxed previews can block some providers)
-  useEffect(() => {
-    try {
-      setIsEmbeddedFrame(window.self !== window.top);
-    } catch {
-      setIsEmbeddedFrame(true);
-    }
-  }, []);
 
   // Close menus on outside click
   useEffect(() => {
@@ -137,11 +130,19 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
     }
   };
 
+  const goToNextSource = useCallback(() => {
+    clearTimeout(loadTimer.current);
+    setAutoAdvancing(false);
+    setError(false);
+    setReported(false);
+    setActiveServer((prev) => (prev + 1) % sources.length);
+  }, [sources.length]);
+
   const handleError = () => {
     setIframeLoaded(true);
     setError(true);
-    if (activeServer < sources.length - 1) {
-      setTimeout(() => setActiveServer((prev) => prev + 1), 2000);
+    if (sources.length > 1) {
+      setTimeout(() => goToNextSource(), 2000);
     }
   };
 
@@ -153,20 +154,14 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
   const handleReport = () => {
     setReported(true);
     setShowReportMenu(false);
-    if (activeServer < sources.length - 1) {
-      setTimeout(() => setActiveServer((prev) => prev + 1), 1500);
+    if (sources.length > 1) {
+      setTimeout(() => goToNextSource(), 1500);
     }
   };
 
   const dismissAdTip = () => {
     setShowAdTip(false);
     localStorage.setItem("hideAdTip", "1");
-  };
-
-  const openCurrentSourceInNewTab = () => {
-    const url = sources[activeServer]?.url;
-    if (!url) return;
-    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   if (!sources.length) {
@@ -209,19 +204,6 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
         )}
       </AnimatePresence>
 
-      {isEmbeddedFrame && (
-        <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-foreground/85">
-            You are in preview mode. If you see “iframe sandbox detected”, use the button below — no settings change needed.
-          </p>
-          <button
-            onClick={openCurrentSourceInNewTab}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            Open and play in new tab
-          </button>
-        </div>
-      )}
 
       {/* Player container */}
       <div
@@ -302,14 +284,15 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
             style={{ border: 0 }}
           />
 
-          {/* Fallback link */}
-          {!showLoading && iframeLoaded && (
+          {/* In-app fallback action */}
+          {!showLoading && iframeLoaded && sources.length > 1 && (
             <div className="absolute bottom-14 left-0 right-0 flex justify-center z-20 px-3">
               <button
-                onClick={openCurrentSourceInNewTab}
-                className="text-xs rounded-md border border-white/20 bg-black/70 px-3 py-1.5 text-white/85 hover:text-white hover:bg-black/80 transition-colors"
+                onClick={goToNextSource}
+                className="inline-flex items-center gap-1.5 text-xs rounded-md border border-white/20 bg-black/70 px-3 py-1.5 text-white/85 hover:text-white hover:bg-black/80 transition-colors"
               >
-                Not playing? Open this server in a new tab
+                <SkipForward className="h-3.5 w-3.5" />
+                Not playing? Try next server
               </button>
             </div>
           )}
@@ -412,6 +395,16 @@ const VideoPlayer = ({ sources, title }: VideoPlayerProps) => {
                       )}
                     </AnimatePresence>
                   </div>
+
+                  {/* Next server */}
+                  <button
+                    onClick={goToNextSource}
+                    className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                    title="Try next server"
+                    disabled={sources.length < 2}
+                  >
+                    <SkipForward className="h-4 w-4" />
+                  </button>
 
                   {/* Fullscreen */}
                   <button
