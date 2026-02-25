@@ -15,11 +15,12 @@ export const fetchStreamingSources = async (
   type: "movie" | "tv",
   year?: string,
   season?: number,
-  episode?: number
+  episode?: number,
+  tmdbId?: number
 ): Promise<StreamingResult> => {
   try {
     const { data, error } = await supabase.functions.invoke("yflix-search", {
-      body: { title, type, year, season, episode },
+      body: { title, type, year, season, episode, tmdbId },
     });
 
     if (error || !data?.success) {

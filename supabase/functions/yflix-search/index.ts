@@ -3,46 +3,79 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-async function searchSite(
-  apiKey: string,
-  site: string,
-  siteName: string,
-  title: string,
-  year?: string,
-): Promise<string | null> {
-  try {
-    const searchQuery = `site:${site} ${title} ${year || ''}`.trim();
-    console.log(`Searching ${siteName}:`, searchQuery);
+/**
+ * Build embeddable player URLs from multiple aggregator services.
+ * These services accept TMDB IDs and return an iframe-ready player.
+ */
+function buildEmbedSources(
+  tmdbId: number,
+  mediaType: 'movie' | 'tv',
+  season?: number,
+  episode?: number,
+): { name: string; quality: string; url: string }[] {
+  const sources: { name: string; quality: string; url: string }[] = [];
 
-    const searchResponse = await fetch('https://api.firecrawl.dev/v1/search', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query: searchQuery, limit: 5 }),
+  // VidSrc.to - popular embed aggregator
+  if (mediaType === 'movie') {
+    sources.push({
+      name: 'Server 1',
+      quality: 'HD',
+      url: `https://vidsrc.to/embed/movie/${tmdbId}`,
     });
-
-    const searchData = await searchResponse.json();
-    if (!searchResponse.ok) {
-      console.error(`${siteName} search error:`, searchData);
-      return null;
-    }
-
-    const results = searchData.data || searchData.results || [];
-    for (const result of results) {
-      const url = result.url || result.link || '';
-      if (url.includes('/watch/') || url.includes('/movie/') || url.includes('/tv/') || url.includes('-free-') || url.includes('-hd-')) {
-        console.log(`${siteName} found:`, url);
-        return url;
-      }
-    }
-
-    return null;
-  } catch (err) {
-    console.error(`${siteName} error:`, err);
-    return null;
+  } else {
+    sources.push({
+      name: 'Server 1',
+      quality: 'HD',
+      url: `https://vidsrc.to/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+    });
   }
+
+  // VidSrc.icu - alternative
+  if (mediaType === 'movie') {
+    sources.push({
+      name: 'Server 2',
+      quality: 'HD',
+      url: `https://vidsrc.icu/embed/movie/${tmdbId}`,
+    });
+  } else {
+    sources.push({
+      name: 'Server 2',
+      quality: 'HD',
+      url: `https://vidsrc.icu/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+    });
+  }
+
+  // embed.su
+  if (mediaType === 'movie') {
+    sources.push({
+      name: 'Server 3',
+      quality: '1080p',
+      url: `https://embed.su/embed/movie/${tmdbId}`,
+    });
+  } else {
+    sources.push({
+      name: 'Server 3',
+      quality: '1080p',
+      url: `https://embed.su/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+    });
+  }
+
+  // multiembed.mov
+  if (mediaType === 'movie') {
+    sources.push({
+      name: 'Server 4',
+      quality: 'HD',
+      url: `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`,
+    });
+  } else {
+    sources.push({
+      name: 'Server 4',
+      quality: 'HD',
+      url: `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season || 1}&e=${episode || 1}`,
+    });
+  }
+
+  return sources;
 }
 
 Deno.serve(async (req) => {
@@ -51,56 +84,32 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { title, type, year, season, episode } = await req.json();
+    const { title, type, year, season, episode, tmdbId } = await req.json();
 
-    if (!title) {
+    if (!title && !tmdbId) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Title is required' }),
+        JSON.stringify({ success: false, error: 'Title or TMDB ID is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
     const mediaType = type === 'tv' ? 'tv' : 'movie';
 
-    const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
-    if (!apiKey) {
+    if (!tmdbId) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Firecrawl not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        JSON.stringify({ success: false, error: 'TMDB ID is required for streaming' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
-    const [yflixFound, sflixFound] = await Promise.all([
-      searchSite(apiKey, 'yflix.to', 'YFlix', title, year),
-      searchSite(apiKey, 'sflix.ps', 'SFlix', title, year),
-    ]);
+    const sources = buildEmbedSources(
+      tmdbId,
+      mediaType as 'movie' | 'tv',
+      season,
+      episode,
+    );
 
-    const sources: { name: string; quality: string; url: string }[] = [];
-
-    if (yflixFound) {
-      let url = yflixFound;
-      if (mediaType === 'tv' && season && episode) {
-        url = `${url}${url.includes('?') ? '&' : '?'}season=${season}&episode=${episode}`;
-      }
-      sources.push({ name: 'YFlix', quality: 'HD', url });
-    }
-
-    if (sflixFound) {
-      let url = sflixFound;
-      if (mediaType === 'tv' && season && episode) {
-        url = `${url}${url.includes('?') ? '&' : '?'}season=${season}&episode=${episode}`;
-      }
-      sources.push({ name: 'SFlix', quality: 'HD', url });
-    }
-
-    if (!sources.length) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'No results found for this title' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-    }
-
-    console.log(`Returning ${sources.length} source(s)`);
+    console.log(`Returning ${sources.length} embed source(s) for ${mediaType} ${tmdbId}`);
 
     return new Response(
       JSON.stringify({ success: true, sources }),
