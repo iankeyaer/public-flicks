@@ -1,0 +1,15 @@
+{
+  "name": "stream-extractor",
+  "version": "1.0.0",
+  "description": "VPS-based m3u8/mp4 stream URL extractor using Puppeteer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "puppeteer": "^23.0.0",
+    "cors": "^2.8.5"
+  }
+}
