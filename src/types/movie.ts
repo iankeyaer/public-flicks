@@ -50,5 +50,5 @@ export interface StreamSource {
   name: string;
   quality: string;
   url: string;
-  type: 'embed';
+  type: 'embed' | 'hls' | 'mp4';
 }
