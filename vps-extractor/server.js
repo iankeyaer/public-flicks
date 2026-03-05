@@ -21,64 +21,10 @@ function authMiddleware(req, res, next) {
 // ── Provider URL builders ──
 const PROVIDERS = [
   {
-    name: 'VidSrc.to',
-    quality: 'HD',
-    movieUrl: (id) => `https://vidsrc.to/embed/movie/${id}`,
-    tvUrl: (id, s, e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    name: 'Vidnest',
-    quality: 'HD',
-    movieUrl: (id) => `https://vidsrc.cc/v2/embed/movie/${id}`,
-    tvUrl: (id, s, e) => `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    name: 'Embed.su',
+    name: 'YFlix',
     quality: '1080p',
-    movieUrl: (id) => `https://embed.su/embed/movie/${id}`,
-    tvUrl: (id, s, e) => `https://embed.su/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    name: '2Embed',
-    quality: 'HD',
-    movieUrl: (id) => `https://www.2embed.cc/embed/movie?tmdb=${id}`,
-    tvUrl: (id, s, e) => `https://www.2embed.cc/embed/tv?tmdb=${id}&s=${s}&e=${e}`,
-  },
-  {
-    name: 'Vidzee',
-    quality: '1080p',
-    movieUrl: (id) => `https://vidsrc.xyz/embed/movie/${id}`,
-    tvUrl: (id, s, e) => `https://vidsrc.xyz/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    name: 'VidRock',
-    quality: 'HD',
-    movieUrl: (id) => `https://vidsrc.icu/embed/movie/${id}`,
-    tvUrl: (id, s, e) => `https://vidsrc.icu/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    name: 'RiveEmbed',
-    quality: '1080p',
-    movieUrl: (id) => `https://rivestream.org/embed?type=movie&id=${id}`,
-    tvUrl: (id, s, e) => `https://rivestream.org/embed?type=tv&id=${id}&s=${s}&e=${e}`,
-  },
-  {
-    name: 'VidFast',
-    quality: 'HD',
-    movieUrl: (id) => `https://vidfast.pro/movie/${id}`,
-    tvUrl: (id, s, e) => `https://vidfast.pro/tv/${id}/${s}/${e}`,
-  },
-  {
-    name: 'VidLink',
-    quality: 'HD',
-    movieUrl: (id) => `https://vidlink.pro/movie/${id}`,
-    tvUrl: (id, s, e) => `https://vidlink.pro/tv/${id}/${s}/${e}`,
-  },
-  {
-    name: 'AutoEmbed',
-    quality: 'HD',
-    movieUrl: (id) => `https://autoembed.co/movie/tmdb/${id}`,
-    tvUrl: (id, s, e) => `https://autoembed.co/tv/tmdb/${id}/${s}/${e}`,
+    movieUrl: (id) => `https://yflix.to/movie/${id}`,
+    tvUrl: (id, s, e) => `https://yflix.to/tv/${id}/${s}/${e}`,
   },
 ];
 

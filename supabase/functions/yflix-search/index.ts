@@ -13,12 +13,7 @@ interface Provider {
 }
 
 const EMBED_PROVIDERS: Provider[] = [
-  { name: 'VidSrc.to', quality: 'HD', movieUrl: (id) => `https://vidsrc.to/embed/movie/${id}`, tvUrl: (id, s, e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}` },
-  { name: 'Vidnest', quality: 'HD', movieUrl: (id) => `https://vidsrc.cc/v2/embed/movie/${id}`, tvUrl: (id, s, e) => `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}` },
-  { name: 'Embed.su', quality: '1080p', movieUrl: (id) => `https://embed.su/embed/movie/${id}`, tvUrl: (id, s, e) => `https://embed.su/embed/tv/${id}/${s}/${e}` },
-  { name: 'Vidzee', quality: '1080p', movieUrl: (id) => `https://vidsrc.xyz/embed/movie/${id}`, tvUrl: (id, s, e) => `https://vidsrc.xyz/embed/tv/${id}/${s}/${e}` },
-  { name: 'VidRock', quality: 'HD', movieUrl: (id) => `https://vidsrc.icu/embed/movie/${id}`, tvUrl: (id, s, e) => `https://vidsrc.icu/embed/tv/${id}/${s}/${e}` },
-  { name: '2Embed', quality: 'HD', movieUrl: (id) => `https://www.2embed.cc/embed/movie?tmdb=${id}`, tvUrl: (id, s, e) => `https://www.2embed.cc/embed/tv?tmdb=${id}&s=${s}&e=${e}` },
+  { name: 'YFlix', quality: '1080p', movieUrl: (id) => `https://yflix.to/movie/${id}`, tvUrl: (id, s, e) => `https://yflix.to/tv/${id}/${s}/${e}` },
 ];
 
 /* ───────── Main handler ───────── */
