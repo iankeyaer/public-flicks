@@ -4,78 +4,95 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-/* ───────── Search yflix.to and find the correct watch page ───────── */
+/* ───────── Search yflix.to via Firecrawl (bypasses Cloudflare) ───────── */
 async function searchYflix(
   title: string,
   type: 'movie' | 'tv',
   year?: string,
 ): Promise<string | null> {
-  const keyword = encodeURIComponent(title);
-  const searchUrl = `https://yflix.to/browser?keyword=${keyword}`;
-
-  console.log(`Searching yflix.to: ${searchUrl}`);
-
-  const res = await fetch(searchUrl, {
-    headers: {
-      'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      Accept: 'text/html',
-    },
-  });
-
-  if (!res.ok) {
-    console.error(`yflix search returned ${res.status}`);
+  const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+  if (!firecrawlKey) {
+    console.error('FIRECRAWL_API_KEY not configured');
     return null;
   }
 
-  const html = await res.text();
+  const keyword = encodeURIComponent(title);
+  const searchUrl = `https://yflix.to/browser?keyword=${keyword}`;
+  console.log(`Scraping yflix.to search via Firecrawl: ${searchUrl}`);
 
-  // Parse search results - look for links like /watch/shelter.8kxbz
-  // Each result card has: <a href="/watch/slug.id"> and nearby year info
-  // Pattern: find all watch links with their surrounding context
-  const resultPattern =
-    /<a[^>]*href="(https:\/\/yflix\.to\/watch\/[^"]+)"[^>]*>[\s\S]*?<\/a>/gi;
-
-  // Simpler approach: extract all watch URLs and their nearby text
-  const watchLinks: { url: string; context: string }[] = [];
-
-  // Find film items - they have class "film-item" or similar card structure
-  // Each card has a link and metadata including year
-  const cardPattern =
-    /href="(https?:\/\/yflix\.to\/watch\/[^"]+)"[\s\S]*?(?:Movie|TV)[\s\S]*?(\d{4})[\s\S]*?(\d+)\s*min/gi;
-
-  let match;
-  while ((match = cardPattern.exec(html)) !== null) {
-    watchLinks.push({
-      url: match[1],
-      context: match[0],
+  try {
+    const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${firecrawlKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: searchUrl,
+        formats: ['html'],
+        waitFor: 3000,
+      }),
     });
-  }
 
-  // If cardPattern didn't work, try a simpler pattern
-  if (watchLinks.length === 0) {
-    const simplePattern =
-      /href="(https?:\/\/yflix\.to\/watch\/[^"]+)"/gi;
-    while ((match = simplePattern.exec(html)) !== null) {
-      // Get surrounding context (200 chars after the match)
-      const startIdx = match.index;
-      const context = html.substring(startIdx, startIdx + 500);
-      watchLinks.push({ url: match[1], context });
+    if (!res.ok) {
+      console.error(`Firecrawl scrape returned ${res.status}`);
+      return null;
     }
-  }
 
-  console.log(`Found ${watchLinks.length} watch links on yflix.to`);
+    const data = await res.json();
+    const html = data?.data?.html || data?.html || '';
 
-  if (watchLinks.length === 0) return null;
+    if (!html) {
+      console.error('Firecrawl returned no HTML');
+      return null;
+    }
 
-  // Try to match by title and year
-  const normalizedTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '');
+    // Parse results - find watch URLs with year context
+    const watchLinks: { url: string; context: string }[] = [];
+    const linkPattern = /href="((?:https?:\/\/yflix\.to)?\/watch\/[^"]+)"/gi;
+    let match;
 
-  for (const link of watchLinks) {
-    const ctx = link.context.toLowerCase();
-    // Check if context contains the year
-    if (year && ctx.includes(year)) {
-      // Check if URL slug roughly matches the title
+    while ((match = linkPattern.exec(html)) !== null) {
+      const url = match[1].startsWith('http')
+        ? match[1]
+        : `https://yflix.to${match[1]}`;
+      const startIdx = match.index;
+      const context = html.substring(startIdx, startIdx + 600);
+      watchLinks.push({ url, context });
+    }
+
+    // Deduplicate
+    const seen = new Set<string>();
+    const uniqueLinks = watchLinks.filter((l) => {
+      if (seen.has(l.url)) return false;
+      seen.add(l.url);
+      return true;
+    });
+
+    console.log(`Found ${uniqueLinks.length} unique watch links on yflix.to`);
+    if (uniqueLinks.length === 0) return null;
+
+    const normalizedTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    // Match by title slug + year
+    for (const link of uniqueLinks) {
+      const slug = link.url.split('/watch/')[1]?.split('.')[0] || '';
+      const normalizedSlug = slug.replace(/-/g, '').replace(/\d+$/, '');
+      const ctx = link.context;
+
+      const titleMatch =
+        normalizedSlug === normalizedTitle ||
+        normalizedSlug.includes(normalizedTitle) ||
+        normalizedTitle.includes(normalizedSlug);
+
+      if (titleMatch && year && ctx.includes(year)) {
+        console.log(`Matched by title+year: ${link.url}`);
+        return link.url;
+      }
+    }
+
+    // Match by title slug only
+    for (const link of uniqueLinks) {
       const slug = link.url.split('/watch/')[1]?.split('.')[0] || '';
       const normalizedSlug = slug.replace(/-/g, '').replace(/\d+$/, '');
       if (
@@ -83,29 +100,17 @@ async function searchYflix(
         normalizedSlug.includes(normalizedTitle) ||
         normalizedTitle.includes(normalizedSlug)
       ) {
-        console.log(`Matched by title+year: ${link.url}`);
+        console.log(`Matched by title slug: ${link.url}`);
         return link.url;
       }
     }
-  }
 
-  // Fallback: match by title slug only
-  for (const link of watchLinks) {
-    const slug = link.url.split('/watch/')[1]?.split('.')[0] || '';
-    const normalizedSlug = slug.replace(/-/g, '').replace(/\d+$/, '');
-    if (
-      normalizedSlug === normalizedTitle ||
-      normalizedSlug.includes(normalizedTitle) ||
-      normalizedTitle.includes(normalizedSlug)
-    ) {
-      console.log(`Matched by title slug: ${link.url}`);
-      return link.url;
-    }
+    console.log(`No exact match, returning first: ${uniqueLinks[0].url}`);
+    return uniqueLinks[0].url;
+  } catch (err) {
+    console.error('Firecrawl search error:', err);
+    return null;
   }
-
-  // Last resort: return first result
-  console.log(`No exact match, returning first result: ${watchLinks[0].url}`);
-  return watchLinks[0].url;
 }
 
 /* ───────── Main handler ───────── */
@@ -127,13 +132,12 @@ Deno.serve(async (req) => {
     const mediaType = type === 'tv' ? 'tv' : 'movie';
     const s = season || 1;
     const e = episode || 1;
+    const searchTitle = title || `${tmdbId}`;
 
     // ── Step 1: Search yflix.to for the watch page URL ──
-    const searchTitle = title || `${tmdbId}`;
     const watchUrl = await searchYflix(searchTitle, mediaType, year);
 
     if (!watchUrl) {
-      console.log(`No results found on yflix.to for "${searchTitle}"`);
       return new Response(
         JSON.stringify({
           success: false,
@@ -143,7 +147,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ── Step 2: Try VPS extractor for direct HLS/MP4 streams from the yflix watch page ──
+    // ── Step 2: Try VPS extractor for direct HLS/MP4 streams ──
     const rawExtractorUrl = Deno.env.get('VPS_EXTRACTOR_URL');
     const extractorKey = Deno.env.get('VPS_API_KEY');
     const normalizedExtractorUrl = rawExtractorUrl
@@ -154,7 +158,7 @@ Deno.serve(async (req) => {
 
     if (normalizedExtractorUrl && extractorKey) {
       try {
-        console.log(`Calling VPS extractor for yflix watch page: ${watchUrl}`);
+        console.log(`Calling VPS extractor for: ${watchUrl}`);
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 45000);
 
@@ -171,7 +175,7 @@ Deno.serve(async (req) => {
               type: mediaType,
               season: s,
               episode: e,
-              watchUrl, // Pass the yflix watch URL to the extractor
+              watchUrl,
             }),
             signal: controller.signal,
           },
@@ -181,9 +185,7 @@ Deno.serve(async (req) => {
         if (extractRes.ok) {
           const extractData = await extractRes.json();
           if (extractData.success && extractData.sources?.length > 0) {
-            console.log(
-              `VPS extractor returned ${extractData.sources.length} direct sources`,
-            );
+            console.log(`VPS extractor returned ${extractData.sources.length} sources`);
             return new Response(
               JSON.stringify({
                 success: true,
@@ -200,14 +202,12 @@ Deno.serve(async (req) => {
         }
         console.log('VPS extractor returned no sources, falling back to embed');
       } catch (err) {
-        console.error('VPS extractor error (falling back to embed):', err);
+        console.error('VPS extractor error:', err);
       }
-    } else {
-      console.log('VPS extractor not configured, using yflix watch page as embed');
     }
 
     // ── Step 3: Return the yflix watch page URL as embed fallback ──
-    console.log(`Returning yflix.to watch page as source: ${watchUrl}`);
+    console.log(`Returning yflix.to watch URL: ${watchUrl}`);
 
     return new Response(
       JSON.stringify({
