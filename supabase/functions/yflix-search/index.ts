@@ -42,16 +42,19 @@ Deno.serve(async (req) => {
     const e = episode || 1;
 
     // ── Step 1: Try VPS extractor for direct HLS/MP4 streams ──
-    const extractorUrl = Deno.env.get('VPS_EXTRACTOR_URL');
+    const rawExtractorUrl = Deno.env.get('VPS_EXTRACTOR_URL');
     const extractorKey = Deno.env.get('VPS_API_KEY');
+    const normalizedExtractorUrl = rawExtractorUrl
+      ? (/^https?:\/\//i.test(rawExtractorUrl) ? rawExtractorUrl : `https://${rawExtractorUrl}`)
+      : null;
 
-    if (extractorUrl && extractorKey) {
+    if (normalizedExtractorUrl && extractorKey) {
       try {
         console.log(`Calling VPS extractor for ${mediaType} ${tmdbId}`);
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 45000);
 
-        const extractRes = await fetch(`${extractorUrl}/extract`, {
+        const extractRes = await fetch(`${normalizedExtractorUrl.replace(/\/$/, '')}/extract`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
