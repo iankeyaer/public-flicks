@@ -39,7 +39,7 @@ const Search = () => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search movies & TV shows..."
-            className="w-full rounded-lg border border-border bg-secondary pl-12 pr-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full rounded-full border border-border bg-secondary pl-12 pr-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       </div>
