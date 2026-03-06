@@ -54,9 +54,8 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Film className="h-10 w-10 text-primary" />
-            <span className="font-display text-4xl tracking-wider text-foreground">
-              VI<span className="text-primary">BIX</span>
+            <span className="text-4xl font-extrabold tracking-tight text-foreground lowercase" style={{ fontFamily: "'Nunito', sans-serif" }}>
+              quo<span className="text-primary">rix</span>
             </span>
           </div>
           <p className="text-muted-foreground text-sm">
