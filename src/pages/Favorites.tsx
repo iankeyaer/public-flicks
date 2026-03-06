@@ -7,15 +7,15 @@ const Favorites = () => {
 
   return (
     <div className="min-h-screen bg-background pt-20 px-4 md:px-12">
-      <h1 className="font-display text-3xl md:text-4xl tracking-wide text-foreground mb-6">
-        My Favorites
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+        My List
       </h1>
 
       {favorites.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Heart className="h-16 w-16 text-muted-foreground/30 mb-4" />
           <p className="text-muted-foreground text-center max-w-md">
-            You haven't added any favorites yet. Browse movies and tap the heart icon to save them here.
+            You haven't added anything to your list yet. Browse movies and tap the heart icon to save them here.
           </p>
         </div>
       ) : (
