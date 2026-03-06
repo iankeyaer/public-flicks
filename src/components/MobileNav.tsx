@@ -5,7 +5,7 @@ const navItems = [
   { to: "/", icon: Home, label: "Home" },
   { to: "/search", icon: Search, label: "Search" },
   { to: "/categories", icon: Grid3X3, label: "Categories" },
-  { to: "/favorites", icon: Heart, label: "Favorites" },
+  { to: "/favorites", icon: Heart, label: "My List" },
   { to: "/requests", icon: MessageSquare, label: "Requests" },
 ];
 

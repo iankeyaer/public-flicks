@@ -6,7 +6,7 @@ import { MovieDetails as MovieDetailsType, StreamSource } from "@/types/movie";
 import MovieSection from "@/components/MovieSection";
 import ReviewSection from "@/components/ReviewSection";
 import VideoPlayer from "@/components/VideoPlayer";
-import { Star, Clock, Calendar, Loader2, Flag, Heart } from "lucide-react";
+import { Star, Clock, Calendar, Loader2, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
 
 import { useFavorites } from "@/hooks/use-favorites";
@@ -32,7 +32,6 @@ const MovieDetails = () => {
     enabled: !!id,
   });
 
-  // Auto-fetch sources from yflix.to and sflix.ps when details load
   useEffect(() => {
     if (!data) return;
     const title = data.title || data.name || "";
@@ -44,33 +43,25 @@ const MovieDetails = () => {
       setSources([]);
 
       const result = await fetchStreamingSources(
-        title,
-        mediaType,
-        year || undefined,
+        title, mediaType, year || undefined,
         mediaType === "tv" ? selectedSeason : undefined,
         mediaType === "tv" ? selectedEpisode : undefined,
         data.id
       );
 
-      if (result.sources.length > 0) {
-        setSources(result.sources);
-      } else {
-        setSourceError(result.error || "No sources found");
-      }
+      if (result.sources.length > 0) setSources(result.sources);
+      else setSourceError(result.error || "No sources found");
       setLoadingSources(false);
     };
 
     fetchSources();
   }, [data?.id, mediaType, selectedSeason, selectedEpisode]);
 
-  // Track watch history
   useEffect(() => {
     if (!data || !user || sources.length === 0) return;
     const title = data.title || data.name || "";
     addToHistory.mutate({
-      tmdb_id: data.id,
-      media_type: mediaType,
-      title,
+      tmdb_id: data.id, media_type: mediaType, title,
       poster_path: data.poster_path,
       season: mediaType === "tv" ? selectedSeason : undefined,
       episode: mediaType === "tv" ? selectedEpisode : undefined,
@@ -101,31 +92,31 @@ const MovieDetails = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Backdrop */}
-      <div className="relative h-[50vh] md:h-[60vh]">
+      {/* Hero backdrop */}
+      <div className="relative h-[55vh] md:h-[65vh]">
         <img
           src={getImageUrl(data.backdrop_path, "original")}
           alt={title}
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 gradient-hero" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/50 to-transparent" />
       </div>
 
-      <div className="relative -mt-48 z-10 container mx-auto px-4 md:px-12">
+      <div className="relative -mt-56 z-10 container mx-auto px-4 md:px-12">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Poster */}
-          <div className="flex-shrink-0 w-48 md:w-64 mx-auto md:mx-0">
+          <div className="flex-shrink-0 w-44 md:w-56 mx-auto md:mx-0">
             <img
               src={getImageUrl(data.poster_path, "w500")}
               alt={title}
-              className="w-full rounded-lg shadow-2xl"
+              className="w-full rounded-xl shadow-2xl"
             />
           </div>
 
           {/* Info */}
           <div className="flex-1 pt-4">
-            <h1 className="font-display text-4xl md:text-5xl tracking-wide text-foreground mb-2">
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground mb-2">
               {title}
             </h1>
             {data.tagline && (
@@ -144,20 +135,20 @@ const MovieDetails = () => {
                 </span>
               )}
               <span className="flex items-center gap-1">
-                <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                <Star className="h-4 w-4 text-primary fill-primary" />
                 {data.vote_average.toFixed(1)} / 10
               </span>
             </div>
 
             <div className="flex flex-wrap gap-2 mb-4">
               {data.genres?.map((g) => (
-                <span key={g.id} className="rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground">
+                <span key={g.id} className="rounded-full bg-secondary border border-border px-3 py-1 text-xs text-secondary-foreground">
                   {g.name}
                 </span>
               ))}
             </div>
 
-            <p className="text-sm text-foreground/80 leading-relaxed mb-6 max-w-2xl">
+            <p className="text-sm text-foreground/70 leading-relaxed mb-6 max-w-2xl">
               {data.overview}
             </p>
 
@@ -166,23 +157,20 @@ const MovieDetails = () => {
                 onClick={() => {
                   document.getElementById('video-player-section')?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="flex items-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="flex items-center gap-2 rounded-full gradient-brand px-7 py-3 text-sm font-bold text-primary-foreground hover:opacity-90 transition-opacity shadow-lg"
               >
                 ▶ Watch Now
               </button>
               <button
                 onClick={() => toggleFavorite({ id: data.id, title: data.title, name: data.name, poster_path: data.poster_path, backdrop_path: data.backdrop_path, overview: data.overview || "", vote_average: data.vote_average, release_date: data.release_date, first_air_date: data.first_air_date, media_type: mediaType, genre_ids: data.genres?.map(g => g.id) || [], popularity: 0 })}
-                className={`flex items-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold transition-colors ${
+                className={`flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition-colors ${
                   isFavorite(data.id)
-                    ? "bg-primary/20 text-primary border border-primary/40"
-                    : "bg-secondary text-secondary-foreground hover:bg-accent"
+                    ? "gradient-brand text-primary-foreground"
+                    : "bg-foreground/10 border border-foreground/20 text-foreground hover:bg-foreground/20"
                 }`}
               >
-                <Heart className={`h-4 w-4 ${isFavorite(data.id) ? "fill-primary text-primary" : ""}`} />
-                {isFavorite(data.id) ? "Favorited" : "Add to Favorites"}
-              </button>
-              <button className="flex items-center gap-2 rounded-md bg-secondary px-4 py-2.5 text-sm text-secondary-foreground hover:bg-accent transition-colors">
-                <Flag className="h-4 w-4" /> Report
+                <Heart className={`h-4 w-4 ${isFavorite(data.id) ? "fill-current" : ""}`} />
+                {isFavorite(data.id) ? "In My List" : "My List"}
               </button>
             </div>
           </div>
@@ -196,12 +184,10 @@ const MovieDetails = () => {
               <select
                 value={selectedSeason}
                 onChange={(e) => { setSelectedSeason(Number(e.target.value)); setSelectedEpisode(1); }}
-                className="bg-secondary text-foreground rounded-md px-3 py-2 text-sm border border-border"
+                className="bg-secondary text-foreground rounded-lg px-3 py-2 text-sm border border-border focus:ring-1 focus:ring-primary focus:outline-none"
               >
                 {data.seasons.filter(s => s.season_number > 0).map((s) => (
-                  <option key={s.season_number} value={s.season_number}>
-                    {s.name}
-                  </option>
+                  <option key={s.season_number} value={s.season_number}>{s.name}</option>
                 ))}
               </select>
             </div>
@@ -210,7 +196,7 @@ const MovieDetails = () => {
               <select
                 value={selectedEpisode}
                 onChange={(e) => setSelectedEpisode(Number(e.target.value))}
-                className="bg-secondary text-foreground rounded-md px-3 py-2 text-sm border border-border"
+                className="bg-secondary text-foreground rounded-lg px-3 py-2 text-sm border border-border focus:ring-1 focus:ring-primary focus:outline-none"
               >
                 {Array.from(
                   { length: data.seasons.find(s => s.season_number === selectedSeason)?.episode_count || 1 },
@@ -226,7 +212,7 @@ const MovieDetails = () => {
         {/* Player Section */}
         <div id="video-player-section" className="mt-8 animate-fade-in">
           {loadingSources ? (
-            <div className="aspect-video bg-secondary rounded-xl flex items-center justify-center">
+            <div className="aspect-video bg-card rounded-xl flex items-center justify-center">
               <div className="text-center space-y-4">
                 <Loader2 className="h-10 w-10 text-primary animate-spin mx-auto" />
                 <div className="space-y-1.5">
@@ -241,7 +227,7 @@ const MovieDetails = () => {
               title={`${title}${mediaType === "tv" ? ` – S${selectedSeason}E${selectedEpisode}` : ""}`}
             />
           ) : (
-            <div className="aspect-video bg-secondary rounded-xl flex items-center justify-center">
+            <div className="aspect-video bg-card rounded-xl flex items-center justify-center">
               <div className="text-center space-y-3">
                 <p className="text-sm text-muted-foreground">
                   {sourceError || "No streaming sources found for this title."}
@@ -260,7 +246,7 @@ const MovieDetails = () => {
                       });
                     }
                   }}
-                  className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                  className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
                 >
                   Try again
                 </button>
@@ -272,8 +258,8 @@ const MovieDetails = () => {
         {/* Trailer */}
         {trailer && (
           <div className="mt-10">
-            <h3 className="font-display text-xl tracking-wide text-foreground mb-3">Official Trailer</h3>
-            <div className="aspect-video max-w-3xl rounded-lg overflow-hidden">
+            <h3 className="text-xl font-bold text-foreground mb-3">Official Trailer</h3>
+            <div className="aspect-video max-w-3xl rounded-xl overflow-hidden">
               <iframe
                 src={`https://www.youtube.com/embed/${trailer.key}`}
                 title="Trailer"

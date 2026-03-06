@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, X, Film, User, LogOut, Clock, MessageSquare } from "lucide-react";
+import { Search, X, User, LogOut, Clock, MessageSquare } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { searchMulti, getImageUrl } from "@/lib/tmdb";
@@ -11,9 +11,16 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query), 200);
@@ -50,25 +57,28 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-background/95 to-background/0 backdrop-blur-sm">
-      <div className="container mx-auto flex items-center justify-between px-4 py-3">
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/95 backdrop-blur-md border-b border-border" : "bg-gradient-to-b from-background/80 to-transparent"}`}>
+      <div className="container mx-auto flex items-center justify-between px-4 md:px-8 py-3">
+        {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          
           <span className="text-2xl font-extrabold tracking-tight text-foreground lowercase" style={{ fontFamily: "'Nunito', sans-serif" }}>
             quo<span className="text-primary">rix</span>
           </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-6">
-          <Link to="/" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">Home</Link>
-          <Link to="/categories" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">Categories</Link>
-          <Link to="/favorites" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">Favorites</Link>
-          <Link to="/requests" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">Requests</Link>
+        {/* Nav Links - Showmax style: simple, clean, spaced */}
+        <div className="hidden md:flex items-center gap-8">
+          <Link to="/" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Home</Link>
+          <Link to="/categories" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Series</Link>
+          <Link to="/categories" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Movies</Link>
+          <Link to="/favorites" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">My List</Link>
+          <Link to="/requests" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">Requests</Link>
           {user && (
-            <Link to="/history" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">History</Link>
+            <Link to="/history" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors">History</Link>
           )}
         </div>
 
+        {/* Right side actions */}
         <div className="flex items-center gap-3">
           {searchOpen ? (
             <div ref={searchRef} className="relative animate-fade-in">
@@ -78,26 +88,26 @@ const Navbar = () => {
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); setShowSuggestions(true); }}
                   onFocus={() => setShowSuggestions(true)}
-                  placeholder="Search movies & shows..."
-                  className="w-48 md:w-64 rounded-md border border-border bg-secondary px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="Search..."
+                  className="w-48 md:w-64 rounded-full border border-border bg-secondary px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <button type="button" onClick={() => { setSearchOpen(false); setQuery(""); setShowSuggestions(false); }}>
                   <X className="h-5 w-5 text-muted-foreground hover:text-foreground" />
                 </button>
               </form>
               {showSuggestions && topResults.length > 0 && (
-                <div className="absolute right-0 top-10 w-72 md:w-80 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden">
+                <div className="absolute right-0 top-12 w-72 md:w-80 bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
                   {topResults.map((item: any) => (
                     <Link
                       key={item.id}
                       to={`/${item.media_type}/${item.id}`}
                       onClick={() => { setSearchOpen(false); setQuery(""); setShowSuggestions(false); }}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-secondary transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-secondary transition-colors"
                     >
                       <img
                         src={getImageUrl(item.poster_path, "w92")}
                         alt={item.title || item.name}
-                        className="w-10 h-14 rounded object-cover bg-muted flex-shrink-0"
+                        className="w-10 h-14 rounded-md object-cover bg-muted flex-shrink-0"
                       />
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{item.title || item.name}</p>
@@ -108,7 +118,7 @@ const Navbar = () => {
                   <Link
                     to={`/search?q=${encodeURIComponent(query)}`}
                     onClick={() => { setSearchOpen(false); setQuery(""); setShowSuggestions(false); }}
-                    className="block text-center text-xs text-primary py-2 border-t border-border hover:bg-secondary transition-colors"
+                    className="block text-center text-xs text-primary py-2.5 border-t border-border hover:bg-secondary transition-colors"
                   >
                     View all results
                   </Link>
@@ -125,12 +135,12 @@ const Navbar = () => {
             <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-semibold"
+                className="h-8 w-8 rounded-full gradient-brand flex items-center justify-center text-primary-foreground text-sm font-bold"
               >
                 {user.email?.charAt(0).toUpperCase()}
               </button>
               {menuOpen && (
-                <div className="absolute right-0 top-10 w-48 bg-card border border-border rounded-lg shadow-lg py-1 z-50">
+                <div className="absolute right-0 top-10 w-48 bg-card border border-border rounded-xl shadow-2xl py-1 z-50">
                   <p className="px-3 py-2 text-xs text-muted-foreground truncate border-b border-border">
                     {user.email}
                   </p>
@@ -152,9 +162,9 @@ const Navbar = () => {
           ) : (
             <Link
               to="/auth"
-              className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+              className="rounded-full gradient-brand px-5 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 transition-opacity"
             >
-              <User className="h-3.5 w-3.5" /> Sign In
+              Sign In
             </Link>
           )}
         </div>

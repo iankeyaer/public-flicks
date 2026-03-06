@@ -2,42 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Nunito:wght@600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Nunito:wght@600;700;800;900&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 2%;
+    --background: 220 30% 6%;
     --foreground: 0 0% 96%;
-    --card: 0 0% 6%;
+    --card: 220 25% 10%;
     --card-foreground: 0 0% 96%;
-    --popover: 0 0% 8%;
+    --popover: 220 25% 12%;
     --popover-foreground: 0 0% 96%;
-    --primary: 36 80% 55%;
-    --primary-foreground: 0 0% 5%;
-    --secondary: 0 0% 10%;
+    --primary: 340 82% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 20% 14%;
     --secondary-foreground: 0 0% 85%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 50%;
-    --accent: 0 0% 14%;
+    --muted: 220 20% 16%;
+    --muted-foreground: 220 10% 50%;
+    --accent: 220 20% 18%;
     --accent-foreground: 0 0% 96%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 12%;
-    --input: 0 0% 12%;
-    --ring: 36 80% 55%;
-    --radius: 0.75rem;
+    --border: 220 20% 14%;
+    --input: 220 20% 14%;
+    --ring: 340 82% 52%;
+    --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 4%;
+    --primary-coral: 16 85% 60%;
+    --gradient-brand: linear-gradient(135deg, hsl(340 82% 52%) 0%, hsl(16 85% 60%) 100%);
+
+    --sidebar-background: 220 30% 5%;
     --sidebar-foreground: 0 0% 85%;
-    --sidebar-primary: 36 80% 55%;
-    --sidebar-primary-foreground: 0 0% 5%;
-    --sidebar-accent: 0 0% 10%;
+    --sidebar-primary: 340 82% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 14%;
     --sidebar-accent-foreground: 0 0% 85%;
-    --sidebar-border: 0 0% 12%;
-    --sidebar-ring: 36 80% 55%;
+    --sidebar-border: 220 20% 14%;
+    --sidebar-ring: 340 82% 52%;
 
-    --hero-gradient: linear-gradient(to top, hsl(0 0% 2%) 0%, transparent 60%);
-    --card-gradient: linear-gradient(to top, hsl(0 0% 0% / 0.9) 0%, transparent 100%);
+    --hero-gradient: linear-gradient(to top, hsl(220 30% 6%) 0%, transparent 60%);
+    --card-gradient: linear-gradient(to top, hsl(220 30% 6% / 0.9) 0%, transparent 100%);
   }
 }
 
@@ -46,11 +49,12 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Poppins', system-ui, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'DM Sans', system-ui, sans-serif;
   }
   h1, h2, h3, .font-display {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-weight: 700;
   }
 }
 
@@ -71,6 +75,9 @@
   .gradient-card {
     background: var(--card-gradient);
   }
+  .gradient-brand {
+    background: var(--gradient-brand);
+  }
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
@@ -81,18 +88,18 @@
   }
   .dpad-mode .tv-focusable:focus {
     @apply ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg;
-    box-shadow: 0 0 20px hsl(36 80% 55% / 0.4);
+    box-shadow: 0 0 20px hsl(340 82% 52% / 0.4);
     transform: scale(1.05);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
   .dpad-mode .tv-focusable:focus-visible {
     @apply ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg;
-    box-shadow: 0 0 20px hsl(36 80% 55% / 0.4);
+    box-shadow: 0 0 20px hsl(340 82% 52% / 0.4);
     transform: scale(1.05);
   }
 
   /* TV layout adjustments */
   .tv-mode {
-    padding-left: 5rem; /* offset for TV sidebar nav */
+    padding-left: 5rem;
   }
 }

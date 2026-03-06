@@ -24,7 +24,7 @@ const Categories = () => {
 
   return (
     <div className="min-h-screen bg-background pt-20 px-4 md:px-12">
-      <h1 className="font-display text-3xl md:text-4xl tracking-wide text-foreground mb-6">
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
         Browse by Genre
       </h1>
 

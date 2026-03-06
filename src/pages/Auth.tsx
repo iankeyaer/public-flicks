@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Film, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
@@ -54,9 +54,8 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Film className="h-10 w-10 text-primary" />
-            <span className="font-display text-4xl tracking-wider text-foreground">
-              VI<span className="text-primary">BIX</span>
+            <span className="text-4xl font-extrabold tracking-tight text-foreground lowercase" style={{ fontFamily: "'Nunito', sans-serif" }}>
+              quo<span className="text-primary">rix</span>
             </span>
           </div>
           <p className="text-muted-foreground text-sm">
@@ -118,7 +117,7 @@ const Auth = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="w-full rounded-full gradient-brand py-2.5 text-sm font-bold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
           </button>
