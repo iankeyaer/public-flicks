@@ -18,21 +18,10 @@ function authMiddleware(req, res, next) {
   next();
 }
 
-// ── Provider URL builders ──
-const PROVIDERS = [
-  {
-    name: 'YFlix',
-    quality: '1080p',
-    movieUrl: (id) => `https://yflix.to/movie/${id}`,
-    tvUrl: (id, s, e) => `https://yflix.to/tv/${id}/${s}/${e}`,
-  },
-];
-
-// ── Extract m3u8 from a single provider URL ──
-async function extractM3U8(browser, url, timeoutMs = 20000) {
+// ── Extract m3u8/mp4 from a page URL ──
+async function extractStreams(browser, url, timeoutMs = 30000) {
   const page = await browser.newPage();
 
-  // Block images, fonts, css for speed
   await page.setRequestInterception(true);
   const m3u8Urls = [];
   const mp4Urls = [];
@@ -62,7 +51,6 @@ async function extractM3U8(browser, url, timeoutMs = 20000) {
       (resUrl.includes('.mp4') && !resUrl.includes('.mp4?')) ||
       contentType.includes('video/mp4')
     ) {
-      // Only add large mp4s (skip tiny tracking pixels)
       const contentLength = res.headers()['content-length'];
       if (!contentLength || parseInt(contentLength) > 500000) {
         mp4Urls.push(resUrl);
@@ -75,15 +63,16 @@ async function extractM3U8(browser, url, timeoutMs = 20000) {
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     );
 
+    console.log(`  Navigating to: ${url}`);
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
 
-    // Wait for network activity to settle or timeout
+    // Wait for network activity to settle
     await Promise.race([
       page.waitForNetworkIdle({ idleTime: 3000, timeout: timeoutMs }),
       new Promise((r) => setTimeout(r, timeoutMs)),
     ]);
 
-    // Also try clicking play buttons if present
+    // Try clicking play buttons if present
     try {
       await page.evaluate(() => {
         const btns = document.querySelectorAll(
@@ -97,10 +86,62 @@ async function extractM3U8(browser, url, timeoutMs = 20000) {
           }
         }
       });
-      // Wait a bit more after clicking
       await new Promise((r) => setTimeout(r, 5000));
     } catch {
-      // No play button found, that's fine
+      // No play button found
+    }
+
+    // Also try clicking on iframes to find embedded players
+    try {
+      const iframeSrcs = await page.evaluate(() => {
+        const iframes = document.querySelectorAll('iframe');
+        return Array.from(iframes).map(f => f.src).filter(s => s && s.startsWith('http'));
+      });
+      
+      for (const iframeSrc of iframeSrcs) {
+        console.log(`  Found iframe: ${iframeSrc}`);
+        try {
+          const iframePage = await browser.newPage();
+          await iframePage.setRequestInterception(true);
+          
+          iframePage.on('request', (req) => {
+            const type = req.resourceType();
+            if (['image', 'font', 'stylesheet'].includes(type)) {
+              req.abort();
+            } else {
+              req.continue();
+            }
+          });
+
+          iframePage.on('response', (res) => {
+            const resUrl = res.url();
+            const ct = res.headers()['content-type'] || '';
+            if (resUrl.includes('.m3u8') || ct.includes('mpegurl') || ct.includes('x-mpegURL')) {
+              m3u8Urls.push(resUrl);
+            }
+            if ((resUrl.includes('.mp4') && !resUrl.includes('.mp4?')) || ct.includes('video/mp4')) {
+              const cl = res.headers()['content-length'];
+              if (!cl || parseInt(cl) > 500000) {
+                mp4Urls.push(resUrl);
+              }
+            }
+          });
+
+          await iframePage.setUserAgent(
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          );
+          await iframePage.goto(iframeSrc, { waitUntil: 'domcontentloaded', timeout: 15000 });
+          await Promise.race([
+            iframePage.waitForNetworkIdle({ idleTime: 2000, timeout: 10000 }),
+            new Promise((r) => setTimeout(r, 10000)),
+          ]);
+          await iframePage.close();
+        } catch (err) {
+          console.log(`  Iframe extraction error: ${err.message}`);
+        }
+      }
+    } catch {
+      // iframe extraction failed
     }
   } catch (err) {
     console.log(`Navigation error for ${url}: ${err.message}`);
@@ -113,15 +154,21 @@ async function extractM3U8(browser, url, timeoutMs = 20000) {
 
 // ── Main extraction endpoint ──
 app.post('/extract', authMiddleware, async (req, res) => {
-  const { tmdbId, type = 'movie', season = 1, episode = 1 } = req.body;
+  const { watchUrl, tmdbId, type = 'movie', season = 1, episode = 1 } = req.body;
 
-  if (!tmdbId) {
-    return res.status(400).json({ success: false, error: 'tmdbId is required' });
+  // Use watchUrl from edge function (preferred) or build from tmdbId
+  let targetUrl = watchUrl;
+  if (!targetUrl && tmdbId) {
+    targetUrl = type === 'tv'
+      ? `https://yflix.to/tv/${tmdbId}/${season}/${episode}`
+      : `https://yflix.to/movie/${tmdbId}`;
   }
 
-  const mediaType = type === 'tv' ? 'tv' : 'movie';
-  let browser;
+  if (!targetUrl) {
+    return res.status(400).json({ success: false, error: 'watchUrl or tmdbId is required' });
+  }
 
+  let browser;
   try {
     browser = await puppeteer.launch({
       headless: 'new',
@@ -136,56 +183,29 @@ app.post('/extract', authMiddleware, async (req, res) => {
       ],
     });
 
-    console.log(`Extracting streams for ${mediaType} ${tmdbId}`);
+    console.log(`Extracting streams from: ${targetUrl}`);
+    const extracted = await extractStreams(browser, targetUrl);
 
-    const results = [];
-
-    // Try providers in parallel (batches of 3 to avoid overwhelming the VPS)
-    for (let i = 0; i < PROVIDERS.length; i += 3) {
-      const batch = PROVIDERS.slice(i, i + 3);
-      const batchResults = await Promise.allSettled(
-        batch.map(async (provider) => {
-          const url =
-            mediaType === 'movie'
-              ? provider.movieUrl(tmdbId)
-              : provider.tvUrl(tmdbId, season, episode);
-
-          console.log(`  Trying ${provider.name}: ${url}`);
-          const extracted = await extractM3U8(browser, url);
-
-          if (extracted.m3u8.length > 0 || extracted.mp4.length > 0) {
-            return {
-              name: provider.name,
-              quality: provider.quality,
-              // Prefer m3u8 over mp4
-              url: extracted.m3u8[0] || extracted.mp4[0],
-              type: extracted.m3u8.length > 0 ? 'hls' : 'mp4',
-              allUrls: {
-                m3u8: extracted.m3u8,
-                mp4: extracted.mp4,
-              },
-            };
-          }
-          return null;
-        })
-      );
-
-      for (const r of batchResults) {
-        if (r.status === 'fulfilled' && r.value) {
-          results.push(r.value);
-        }
-      }
-
-      // If we have at least 2 working sources, stop early
-      if (results.length >= 2) break;
+    const sources = [];
+    if (extracted.m3u8.length > 0) {
+      sources.push({
+        name: 'YFlix',
+        quality: '1080p',
+        url: extracted.m3u8[0],
+        type: 'hls',
+      });
+    } else if (extracted.mp4.length > 0) {
+      sources.push({
+        name: 'YFlix',
+        quality: '1080p',
+        url: extracted.mp4[0],
+        type: 'mp4',
+      });
     }
 
-    console.log(`Found ${results.length} working sources`);
+    console.log(`Found ${sources.length} sources (m3u8: ${extracted.m3u8.length}, mp4: ${extracted.mp4.length})`);
 
-    return res.json({
-      success: true,
-      sources: results,
-    });
+    return res.json({ success: true, sources });
   } catch (err) {
     console.error('Extraction error:', err);
     return res.status(500).json({ success: false, error: err.message });
