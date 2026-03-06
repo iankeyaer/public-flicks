@@ -24,13 +24,13 @@ const MovieSection = ({ title, movies }: MovieSectionProps) => {
 
   return (
     <section className="relative px-3 sm:px-4 md:px-12 mb-6 md:mb-8">
-      <h2 className="font-display text-xl md:text-2xl tracking-wide text-foreground mb-3">
+      <h2 className="text-lg md:text-xl font-bold text-foreground mb-3">
         {title}
       </h2>
       <div className="group relative">
         <button
           onClick={() => scroll("left")}
-          className="absolute left-0 top-0 bottom-0 z-10 w-10 flex items-center justify-center bg-gradient-to-r from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute left-0 top-0 bottom-8 z-10 w-10 flex items-center justify-center bg-gradient-to-r from-background/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <ChevronLeft className="h-6 w-6 text-foreground" />
         </button>
@@ -41,7 +41,7 @@ const MovieSection = ({ title, movies }: MovieSectionProps) => {
         </div>
         <button
           onClick={() => scroll("right")}
-          className="absolute right-0 top-0 bottom-0 z-10 w-10 flex items-center justify-center bg-gradient-to-l from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute right-0 top-0 bottom-8 z-10 w-10 flex items-center justify-center bg-gradient-to-l from-background/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <ChevronRight className="h-6 w-6 text-foreground" />
         </button>

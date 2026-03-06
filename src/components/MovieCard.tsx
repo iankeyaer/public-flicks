@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Star } from "lucide-react";
 import { Movie } from "@/types/movie";
 import { getImageUrl } from "@/lib/tmdb";
 
@@ -11,7 +10,6 @@ interface MovieCardProps {
 const MovieCard = ({ movie, index = 0 }: MovieCardProps) => {
   const type = movie.media_type === "tv" || movie.name && !movie.title ? "tv" : "movie";
   const title = movie.title || movie.name || "Untitled";
-  const year = (movie.release_date || movie.first_air_date || "").slice(0, 4);
 
   return (
     <Link
@@ -19,31 +17,17 @@ const MovieCard = ({ movie, index = 0 }: MovieCardProps) => {
       className="tv-focusable group relative flex-shrink-0 w-32 sm:w-36 md:w-44 lg:w-48 2xl:w-56 transition-transform duration-300 hover:scale-105 hover:z-10 focus:scale-105 focus:z-10"
       style={{ animationDelay: `${index * 50}ms` }}
     >
-      <div className="aspect-[2/3] bg-secondary rounded-lg overflow-hidden">
+      <div className="aspect-[2/3] bg-card rounded-lg overflow-hidden relative">
         <img
           src={getImageUrl(movie.poster_path, "w342")}
           alt={title}
           loading="lazy"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        <div className="absolute inset-0 gradient-card opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex flex-col justify-end p-3">
-          <div className="flex items-center gap-2">
-            {year && <span className="text-xs text-muted-foreground">{year}</span>}
-            <div className="flex items-center gap-0.5">
-              <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-              <span className="text-xs text-muted-foreground">{movie.vote_average.toFixed(1)}</span>
-            </div>
-          </div>
-        </div>
+        {/* Showmax-style bottom gradient overlay on hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" />
       </div>
-      <p className="text-[11px] sm:text-xs 2xl:text-sm font-medium text-foreground mt-1.5 line-clamp-1">{title}</p>
-      <div className="flex items-center gap-2 mt-0.5">
-        <div className="flex items-center gap-1">
-          <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-          <span className="text-[10px] sm:text-[11px] 2xl:text-xs font-medium text-foreground">{movie.vote_average.toFixed(1)}</span>
-        </div>
-        {year && <span className="text-[10px] 2xl:text-xs text-muted-foreground">· {year}</span>}
-      </div>
+      <p className="text-[11px] sm:text-xs 2xl:text-sm font-medium text-foreground mt-2 line-clamp-1">{title}</p>
     </Link>
   );
 };

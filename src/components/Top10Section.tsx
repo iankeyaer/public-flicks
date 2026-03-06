@@ -15,8 +15,8 @@ const Top10Section = () => {
 
   return (
     <section className="px-4 md:px-12 py-4">
-      <h2 className="font-display text-2xl tracking-wide text-foreground mb-3">
-        🏆 Top 10 This Week
+      <h2 className="text-lg md:text-xl font-bold text-foreground mb-3">
+        Top 10 This Week
       </h2>
       <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
         {top10.map((movie, i) => (
@@ -25,14 +25,14 @@ const Top10Section = () => {
             to={`/${movie.media_type || "movie"}/${movie.id}`}
             className="tv-focusable flex-shrink-0 flex items-end group focus:scale-105 transition-transform"
           >
-            <span className="font-display text-[80px] md:text-[100px] leading-none text-foreground/10 -mr-4 z-10 select-none">
+            <span className="font-bold text-[80px] md:text-[100px] leading-none text-foreground/10 -mr-4 z-10 select-none" style={{ fontFamily: "'Nunito', sans-serif" }}>
               {i + 1}
             </span>
             <div className="w-28 md:w-32 aspect-[2/3] rounded-lg overflow-hidden bg-card relative">
               <img
                 src={getImageUrl(movie.poster_path)}
                 alt={movie.title || movie.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               />
             </div>
           </Link>

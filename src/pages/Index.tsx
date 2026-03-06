@@ -27,9 +27,9 @@ const Index = () => {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="text-center max-w-md">
-          <h2 className="font-display text-3xl text-foreground mb-3">API Key Required</h2>
+          <h2 className="text-3xl font-bold text-foreground mb-3">API Key Required</h2>
           <p className="text-muted-foreground text-sm mb-4">
-            To use Vibix, you need a free TMDB API key.
+            To use Quorix, you need a free TMDB API key.
           </p>
           <ol className="text-left text-sm text-muted-foreground space-y-2">
             <li>1. Go to <a href="https://www.themoviedb.org/signup" target="_blank" rel="noreferrer" className="text-primary underline">themoviedb.org</a> and create a free account</li>
@@ -48,11 +48,11 @@ const Index = () => {
       <div className="-mt-16 relative z-10 space-y-2">
         <ContinueWatchingSection />
         <Top10Section />
-        <MovieSection title="🔥 Trending Now" movies={trending.data?.results || []} />
-        <MovieSection title="🎬 Popular Movies" movies={popular.data?.results || []} />
-        <MovieSection title="🆕 New Releases" movies={nowPlaying.data?.results || []} />
-        <MovieSection title="📺 Top TV Shows" movies={topTV.data?.results || []} />
-        <MovieSection title="📈 Trending TV" movies={trendingTV.data?.results || []} />
+        <MovieSection title="Trending Now" movies={trending.data?.results || []} />
+        <MovieSection title="Popular Movies" movies={popular.data?.results || []} />
+        <MovieSection title="New Releases" movies={nowPlaying.data?.results || []} />
+        <MovieSection title="Top TV Shows" movies={topTV.data?.results || []} />
+        <MovieSection title="Trending TV" movies={trendingTV.data?.results || []} />
       </div>
     </div>
   );
