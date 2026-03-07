@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Cinzel"', 'Georgia', 'serif'],
+        display: ['"Bebas Neue"', '"Arial Narrow"', 'sans-serif'],
         sans: ['"Poppins"', 'system-ui', 'sans-serif'],
       },
       colors: {
