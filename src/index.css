@@ -53,10 +53,10 @@
     font-family: 'Poppins', system-ui, sans-serif;
   }
   h1, h2, h3, .font-display {
-    font-family: 'Cinzel', 'Georgia', serif;
+    font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
     font-weight: 400;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
   }
 }
 
