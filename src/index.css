@@ -50,10 +50,10 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
   }
   h1, h2, h3, .font-display {
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-weight: 700;
   }
 }
