@@ -106,7 +106,8 @@ const MovieDetails = () => {
               title={title}
               className="w-full h-full border-0"
               allowFullScreen
-              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+              sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
             />
           </div>
         </div>
