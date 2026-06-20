@@ -4,8 +4,8 @@ import { getDetails, getImageUrl } from "@/lib/tmdb";
 import { MovieDetails as MovieDetailsType } from "@/types/movie";
 import MovieSection from "@/components/MovieSection";
 import ReviewSection from "@/components/ReviewSection";
-import { Star, Clock, Calendar, Loader2, Heart, ArrowLeft } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Star, Clock, Calendar, Loader2, Heart } from "lucide-react";
+import { useState } from "react";
 
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchHistory } from "@/hooks/use-watch-history";
@@ -16,8 +16,6 @@ const MovieDetails = () => {
   const mediaType = (type === "tv" ? "tv" : "movie") as "movie" | "tv";
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
-  const [showPlayer, setShowPlayer] = useState(false);
-  const [embedUrl, setEmbedUrl] = useState<string>("");
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addToHistory } = useWatchHistory();
   const { user } = useAuth();
@@ -27,15 +25,6 @@ const MovieDetails = () => {
     queryFn: () => getDetails(mediaType, Number(id)),
     enabled: !!id,
   });
-
-  // Lock body scroll when player is open
-  useEffect(() => {
-    if (showPlayer) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      return () => { document.body.style.overflow = prev; };
-    }
-  }, [showPlayer]);
 
   const handleWatch = () => {
     if (!data) return;
@@ -56,8 +45,7 @@ const MovieDetails = () => {
     } else {
       url = `https://player.videasy.net/movie/${data.id}`;
     }
-    setEmbedUrl(url);
-    setShowPlayer(true);
+    window.open(url, "_blank");
   };
 
   if (isLoading) {
@@ -84,35 +72,6 @@ const MovieDetails = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Fullscreen Player Overlay */}
-      {showPlayer && (
-        <div className="fixed inset-0 z-[100] bg-black flex flex-col">
-          <div className="flex items-center gap-3 px-4 py-3 bg-black/80 backdrop-blur-sm">
-            <button
-              onClick={() => setShowPlayer(false)}
-              className="flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-              aria-label="Back"
-            >
-              <ArrowLeft className="h-5 w-5" />
-              Back
-            </button>
-            <span className="text-sm text-white/80 truncate">
-              {title}{mediaType === "tv" ? ` – S${selectedSeason}E${selectedEpisode}` : ""}
-            </span>
-          </div>
-          <div className="flex-1 bg-black">
-            <iframe
-              src={embedUrl}
-              title={title}
-              className="w-full h-full border-0"
-              allowFullScreen
-              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-              sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-            />
-          </div>
-        </div>
-      )}
-
       {/* Hero backdrop */}
       <div className="relative h-[55vh] md:h-[65vh]">
         <img
