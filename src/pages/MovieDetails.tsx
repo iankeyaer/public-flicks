@@ -1,13 +1,11 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getDetails, getImageUrl } from "@/lib/tmdb";
-import { MovieDetails as MovieDetailsType, StreamSource } from "@/types/movie";
+import { MovieDetails as MovieDetailsType } from "@/types/movie";
 import MovieSection from "@/components/MovieSection";
 import ReviewSection from "@/components/ReviewSection";
-import VideoPlayer from "@/components/VideoPlayer";
-import { Star, Clock, Calendar, Loader2, Heart, ArrowLeft, AlertCircle } from "lucide-react";
+import { Star, Clock, Calendar, Loader2, Heart, ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
-import { fetchStreamingSources } from "@/lib/streaming-sources";
 
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchHistory } from "@/hooks/use-watch-history";
@@ -19,9 +17,7 @@ const MovieDetails = () => {
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const [showPlayer, setShowPlayer] = useState(false);
-  const [sources, setSources] = useState<StreamSource[]>([]);
-  const [loadingStreams, setLoadingStreams] = useState(false);
-  const [streamError, setStreamError] = useState<string | null>(null);
+  const [embedUrl, setEmbedUrl] = useState<string>("");
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addToHistory } = useWatchHistory();
   const { user } = useAuth();
@@ -41,12 +37,8 @@ const MovieDetails = () => {
     }
   }, [showPlayer]);
 
-  const handleWatch = async () => {
+  const handleWatch = () => {
     if (!data) return;
-    setShowPlayer(true);
-    setLoadingStreams(true);
-    setStreamError(null);
-    setSources([]);
 
     if (user) {
       const title = data.title || data.name || "";
@@ -58,22 +50,14 @@ const MovieDetails = () => {
       });
     }
 
-    const year = (data.release_date || data.first_air_date || "").slice(0, 4);
-    const result = await fetchStreamingSources(
-      data.title || data.name || "",
-      mediaType,
-      year,
-      mediaType === "tv" ? selectedSeason : undefined,
-      mediaType === "tv" ? selectedEpisode : undefined,
-      data.id,
-    );
-
-    setLoadingStreams(false);
-    if (result.error || !result.sources.length) {
-      setStreamError(result.error || "No streams available");
+    let url: string;
+    if (mediaType === "tv") {
+      url = `https://player.videasy.net/tv/${data.id}/${selectedSeason}/${selectedEpisode}`;
     } else {
-      setSources(result.sources);
+      url = `https://player.videasy.net/movie/${data.id}`;
     }
+    setEmbedUrl(url);
+    setShowPlayer(true);
   };
 
   if (isLoading) {
