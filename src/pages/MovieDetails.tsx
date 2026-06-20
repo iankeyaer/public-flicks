@@ -5,7 +5,7 @@ import { MovieDetails as MovieDetailsType } from "@/types/movie";
 import MovieSection from "@/components/MovieSection";
 import ReviewSection from "@/components/ReviewSection";
 import { Star, Clock, Calendar, Loader2, Heart } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchHistory } from "@/hooks/use-watch-history";
