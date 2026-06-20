@@ -4,8 +4,8 @@ import { getDetails, getImageUrl } from "@/lib/tmdb";
 import { MovieDetails as MovieDetailsType } from "@/types/movie";
 import MovieSection from "@/components/MovieSection";
 import ReviewSection from "@/components/ReviewSection";
-import { Star, Clock, Calendar, Loader2, Heart, ArrowLeft } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Star, Clock, Calendar, Loader2, Heart } from "lucide-react";
+import { useState } from "react";
 
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchHistory } from "@/hooks/use-watch-history";
@@ -16,8 +16,6 @@ const MovieDetails = () => {
   const mediaType = (type === "tv" ? "tv" : "movie") as "movie" | "tv";
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
-  const [showPlayer, setShowPlayer] = useState(false);
-  const [embedUrl, setEmbedUrl] = useState("");
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addToHistory } = useWatchHistory();
   const { user } = useAuth();
@@ -28,16 +26,6 @@ const MovieDetails = () => {
     enabled: !!id,
   });
 
-  useEffect(() => {
-    if (showPlayer) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [showPlayer]);
 
   const handleWatch = () => {
     if (!data) return;
@@ -58,8 +46,7 @@ const MovieDetails = () => {
     } else {
       url = `https://vidlink.pro/movie/${data.id}`;
     }
-    setEmbedUrl(url);
-    setShowPlayer(true);
+    window.open(url, "_blank");
   };
 
   if (isLoading) {
@@ -230,30 +217,6 @@ const MovieDetails = () => {
 
       <div className="h-12" />
 
-      {/* Fullscreen Player */}
-      {showPlayer && (
-        <div className="fixed inset-0 z-50 bg-black flex flex-col">
-          <div className="flex items-center gap-2 px-4 py-3 bg-black/80">
-            <button
-              onClick={() => setShowPlayer(false)}
-              className="flex items-center gap-1 text-white text-sm hover:opacity-80 transition-opacity"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </button>
-          </div>
-          <div className="flex-1">
-            <iframe
-              src={embedUrl}
-              title="Player"
-              className="w-full h-full"
-              frameBorder="0"
-              allowFullScreen
-              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
