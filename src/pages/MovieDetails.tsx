@@ -1,12 +1,10 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getDetails, getImageUrl } from "@/lib/tmdb";
-import { fetchStreamingSources } from "@/lib/streaming-sources";
-import { MovieDetails as MovieDetailsType, StreamSource } from "@/types/movie";
+import { MovieDetails as MovieDetailsType } from "@/types/movie";
 import MovieSection from "@/components/MovieSection";
 import ReviewSection from "@/components/ReviewSection";
-import VideoPlayer from "@/components/VideoPlayer";
-import { Star, Clock, Calendar, Loader2, Heart } from "lucide-react";
+import { Star, Clock, Calendar, Loader2, Heart, ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 
 import { useFavorites } from "@/hooks/use-favorites";
@@ -18,13 +16,10 @@ const MovieDetails = () => {
   const mediaType = (type === "tv" ? "tv" : "movie") as "movie" | "tv";
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
+  const [showPlayer, setShowPlayer] = useState(false);
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addToHistory } = useWatchHistory();
   const { user } = useAuth();
-
-  const [sources, setSources] = useState<StreamSource[]>([]);
-  const [loadingSources, setLoadingSources] = useState(false);
-  const [sourceError, setSourceError] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery<MovieDetailsType>({
     queryKey: ["details", mediaType, id],
@@ -32,33 +27,24 @@ const MovieDetails = () => {
     enabled: !!id,
   });
 
+  const embedUrl = data
+    ? mediaType === "movie"
+      ? `https://vidsrc.to/embed/movie/${data.id}`
+      : `https://vidsrc.to/embed/tv/${data.id}/${selectedSeason}/${selectedEpisode}`
+    : "";
+
+  // Lock body scroll when player is open
   useEffect(() => {
-    if (!data) return;
-    const title = data.title || data.name || "";
-    const year = (data.release_date || data.first_air_date || "").slice(0, 4);
+    if (showPlayer) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [showPlayer]);
 
-    const fetchSources = async () => {
-      setLoadingSources(true);
-      setSourceError(null);
-      setSources([]);
-
-      const result = await fetchStreamingSources(
-        title, mediaType, year || undefined,
-        mediaType === "tv" ? selectedSeason : undefined,
-        mediaType === "tv" ? selectedEpisode : undefined,
-        data.id
-      );
-
-      if (result.sources.length > 0) setSources(result.sources);
-      else setSourceError(result.error || "No sources found");
-      setLoadingSources(false);
-    };
-
-    fetchSources();
-  }, [data?.id, mediaType, selectedSeason, selectedEpisode]);
-
+  // Record watch history when player opens
   useEffect(() => {
-    if (!data || !user || sources.length === 0) return;
+    if (!showPlayer || !data || !user) return;
     const title = data.title || data.name || "";
     addToHistory.mutate({
       tmdb_id: data.id, media_type: mediaType, title,
@@ -66,7 +52,7 @@ const MovieDetails = () => {
       season: mediaType === "tv" ? selectedSeason : undefined,
       episode: mediaType === "tv" ? selectedEpisode : undefined,
     });
-  }, [data?.id, mediaType, selectedSeason, selectedEpisode, sources.length]);
+  }, [showPlayer]);
 
   if (isLoading) {
     return (
@@ -92,6 +78,34 @@ const MovieDetails = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Fullscreen Player Overlay */}
+      {showPlayer && (
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+          <div className="flex items-center gap-3 px-4 py-3 bg-black/80 backdrop-blur-sm">
+            <button
+              onClick={() => setShowPlayer(false)}
+              className="flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+              aria-label="Back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              Back
+            </button>
+            <span className="text-sm text-white/80 truncate">
+              {title}{mediaType === "tv" ? ` – S${selectedSeason}E${selectedEpisode}` : ""}
+            </span>
+          </div>
+          <div className="flex-1 bg-black">
+            <iframe
+              src={embedUrl}
+              title={title}
+              className="w-full h-full border-0"
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
+
       {/* Hero backdrop */}
       <div className="relative h-[55vh] md:h-[65vh]">
         <img
@@ -154,9 +168,7 @@ const MovieDetails = () => {
 
             <div className="flex flex-wrap gap-3 mb-6">
               <button
-                onClick={() => {
-                  document.getElementById('video-player-section')?.scrollIntoView({ behavior: 'smooth' });
-                }}
+                onClick={() => setShowPlayer(true)}
                 className="flex items-center gap-2 rounded-full gradient-brand px-7 py-3 text-sm font-bold text-primary-foreground hover:opacity-90 transition-opacity shadow-lg"
               >
                 ▶ Watch Now
@@ -208,52 +220,6 @@ const MovieDetails = () => {
             </div>
           </div>
         )}
-
-        {/* Player Section */}
-        <div id="video-player-section" className="mt-8 animate-fade-in">
-          {loadingSources ? (
-            <div className="aspect-video bg-card rounded-xl flex items-center justify-center">
-              <div className="text-center space-y-4">
-                <Loader2 className="h-10 w-10 text-primary animate-spin mx-auto" />
-                <div className="space-y-1.5">
-                  <p className="text-sm font-medium text-foreground">Finding streams...</p>
-                  <p className="text-xs text-muted-foreground">Searching for "{title}"</p>
-                </div>
-              </div>
-            </div>
-          ) : sources.length > 0 ? (
-            <VideoPlayer
-              sources={sources}
-              title={`${title}${mediaType === "tv" ? ` – S${selectedSeason}E${selectedEpisode}` : ""}`}
-            />
-          ) : (
-            <div className="aspect-video bg-card rounded-xl flex items-center justify-center">
-              <div className="text-center space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  {sourceError || "No streaming sources found for this title."}
-                </p>
-                <button
-                  onClick={() => {
-                    if (data) {
-                      const t = data.title || data.name || "";
-                      const y = (data.release_date || data.first_air_date || "").slice(0, 4);
-                      setLoadingSources(true);
-                      setSourceError(null);
-                      fetchStreamingSources(t, mediaType, y || undefined, mediaType === "tv" ? selectedSeason : undefined, mediaType === "tv" ? selectedEpisode : undefined, data.id).then(result => {
-                        if (result.sources.length > 0) setSources(result.sources);
-                        else setSourceError(result.error || "No sources found");
-                        setLoadingSources(false);
-                      });
-                    }
-                  }}
-                  className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-                >
-                  Try again
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Trailer */}
         {trailer && (
