@@ -100,29 +100,14 @@ const MovieDetails = () => {
               {title}{mediaType === "tv" ? ` – S${selectedSeason}E${selectedEpisode}` : ""}
             </span>
           </div>
-          <div className="flex-1 bg-black flex items-center justify-center">
-            {loadingStreams ? (
-              <div className="text-center space-y-3">
-                <Loader2 className="h-10 w-10 text-primary animate-spin mx-auto" />
-                <p className="text-sm text-white/80">Extracting stream...</p>
-                <p className="text-xs text-white/50">This can take 30-60 seconds</p>
-              </div>
-            ) : streamError ? (
-              <div className="text-center space-y-3 px-4">
-                <AlertCircle className="h-10 w-10 text-primary mx-auto" />
-                <p className="text-sm text-white/80">{streamError}</p>
-                <button
-                  onClick={handleWatch}
-                  className="rounded-full gradient-brand px-5 py-2 text-sm font-semibold text-primary-foreground"
-                >
-                  Try again
-                </button>
-              </div>
-            ) : sources.length > 0 ? (
-              <div className="w-full h-full">
-                <VideoPlayer sources={sources} title={title} />
-              </div>
-            ) : null}
+          <div className="flex-1 bg-black">
+            <iframe
+              src={embedUrl}
+              title={title}
+              className="w-full h-full border-0"
+              allowFullScreen
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            />
           </div>
         </div>
       )}
