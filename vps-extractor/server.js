@@ -19,7 +19,7 @@ function authMiddleware(req, res, next) {
 }
 
 // ── Extract m3u8/mp4 from a page URL ──
-async function extractStreams(browser, url, timeoutMs = 30000) {
+async function extractStreams(browser, url, timeoutMs = 45000) {
   const page = await browser.newPage();
 
   await page.setRequestInterception(true);
@@ -68,7 +68,7 @@ async function extractStreams(browser, url, timeoutMs = 30000) {
 
     // Wait for network activity to settle
     await Promise.race([
-      page.waitForNetworkIdle({ idleTime: 3000, timeout: timeoutMs }),
+      page.waitForNetworkIdle({ idleTime: 5000, timeout: timeoutMs }),
       new Promise((r) => setTimeout(r, timeoutMs)),
     ]);
 
@@ -130,10 +130,10 @@ async function extractStreams(browser, url, timeoutMs = 30000) {
           await iframePage.setUserAgent(
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
           );
-          await iframePage.goto(iframeSrc, { waitUntil: 'domcontentloaded', timeout: 15000 });
+          await iframePage.goto(iframeSrc, { waitUntil: 'domcontentloaded', timeout: 45000 });
           await Promise.race([
-            iframePage.waitForNetworkIdle({ idleTime: 2000, timeout: 10000 }),
-            new Promise((r) => setTimeout(r, 10000)),
+            iframePage.waitForNetworkIdle({ idleTime: 5000, timeout: 45000 }),
+            new Promise((r) => setTimeout(r, 45000)),
           ]);
           await iframePage.close();
         } catch (err) {
@@ -157,12 +157,11 @@ app.post('/extract', authMiddleware, async (req, res) => {
   const { watchUrl, tmdbId, type = 'movie', season = 1, episode = 1 } = req.body;
 
   // Use watchUrl from edge function (preferred) or build from tmdbId
-  let targetUrl = watchUrl;
-  if (!targetUrl && tmdbId) {
-    targetUrl = type === 'tv'
-      ? `https://yflix.to/tv/${tmdbId}/${season}/${episode}`
-      : `https://yflix.to/movie/${tmdbId}`;
-  }
+  let targetUrl = tmdbId
+    ? (type === 'tv'
+        ? `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}`
+        : `https://vidsrc.to/embed/movie/${tmdbId}`)
+    : watchUrl;
 
   if (!targetUrl) {
     return res.status(400).json({ success: false, error: 'watchUrl or tmdbId is required' });
@@ -180,6 +179,7 @@ app.post('/extract', authMiddleware, async (req, res) => {
         '--no-first-run',
         '--no-zygote',
         '--single-process',
+        '--disable-blink-features=AutomationControlled',
       ],
     });
 
