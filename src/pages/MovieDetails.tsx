@@ -4,7 +4,7 @@ import { getDetails, getImageUrl } from "@/lib/tmdb";
 import { MovieDetails as MovieDetailsType } from "@/types/movie";
 import MovieSection from "@/components/MovieSection";
 import ReviewSection from "@/components/ReviewSection";
-import { Star, Clock, Calendar, Loader2, Heart } from "lucide-react";
+import { Star, Clock, Calendar, Loader2, Heart, ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 
 import { useFavorites } from "@/hooks/use-favorites";
@@ -16,6 +16,8 @@ const MovieDetails = () => {
   const mediaType = (type === "tv" ? "tv" : "movie") as "movie" | "tv";
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
+  const [showPlayer, setShowPlayer] = useState(false);
+  const [embedUrl, setEmbedUrl] = useState("");
   const { toggleFavorite, isFavorite } = useFavorites();
   const { addToHistory } = useWatchHistory();
   const { user } = useAuth();
@@ -25,6 +27,17 @@ const MovieDetails = () => {
     queryFn: () => getDetails(mediaType, Number(id)),
     enabled: !!id,
   });
+
+  useEffect(() => {
+    if (showPlayer) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showPlayer]);
 
   const handleWatch = () => {
     if (!data) return;
@@ -41,11 +54,12 @@ const MovieDetails = () => {
 
     let url: string;
     if (mediaType === "tv") {
-      url = `https://player.videasy.net/tv/${data.id}/${selectedSeason}/${selectedEpisode}`;
+      url = `https://vidlink.pro/tv/${data.id}/${selectedSeason}/${selectedEpisode}`;
     } else {
-      url = `https://player.videasy.net/movie/${data.id}`;
+      url = `https://vidlink.pro/movie/${data.id}`;
     }
-    window.open(url, "_blank");
+    setEmbedUrl(url);
+    setShowPlayer(true);
   };
 
   if (isLoading) {
@@ -215,6 +229,31 @@ const MovieDetails = () => {
       </div>
 
       <div className="h-12" />
+
+      {/* Fullscreen Player */}
+      {showPlayer && (
+        <div className="fixed inset-0 z-50 bg-black flex flex-col">
+          <div className="flex items-center gap-2 px-4 py-3 bg-black/80">
+            <button
+              onClick={() => setShowPlayer(false)}
+              className="flex items-center gap-1 text-white text-sm hover:opacity-80 transition-opacity"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+          </div>
+          <div className="flex-1">
+            <iframe
+              src={embedUrl}
+              title="Player"
+              className="w-full h-full"
+              frameBorder="0"
+              allowFullScreen
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
